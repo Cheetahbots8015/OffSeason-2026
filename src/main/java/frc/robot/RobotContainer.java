@@ -14,13 +14,20 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.FeederCommands.FeederCommand;
+import frc.robot.commands.IndexerCommands.IndexerCommand;
 import frc.robot.commands.IntakeCommands.IntakeCommand;
 import frc.robot.commands.IntakeCommands.IntakeDriveCommand;
 import frc.robot.commands.ShooterCommands.ShootCommand;
@@ -35,6 +42,9 @@ import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.feeder.FeederIOSim;
 import frc.robot.subsystems.feeder.FeederIOTalonFX;
 import frc.robot.subsystems.feeder.FeederSubsystem;
+import frc.robot.subsystems.indexer.IndexerIOSim;
+import frc.robot.subsystems.indexer.IndexerOTalonFX;
+import frc.robot.subsystems.indexer.IndexerSubsystem;
 import frc.robot.subsystems.intake.*;
 import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.shooter.ShooterIOTalonFX;
@@ -55,6 +65,7 @@ public class RobotContainer {
   private final IntakeSubsystem intake;
   private final FeederSubsystem feeder;
   private final ShooterSubsystem shooter;
+  private final IndexerSubsystem indexer;
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -72,6 +83,7 @@ public class RobotContainer {
         intake = new IntakeSubsystem(new IntakeIOTalonFX());
         feeder = new FeederSubsystem(new FeederIOTalonFX());
         shooter = new ShooterSubsystem(new ShooterIOTalonFX());
+        indexer = new IndexerSubsystem(new IndexerOTalonFX());
         break;
 
       case SIM:
@@ -86,6 +98,7 @@ public class RobotContainer {
         intake = new IntakeSubsystem(new IntakeIOSim());
         feeder = new FeederSubsystem(new FeederIOSim());
         shooter = new ShooterSubsystem(new ShooterIOSim());
+        indexer = new IndexerSubsystem(new IndexerIOSim());
         break;
 
       default:
@@ -100,14 +113,31 @@ public class RobotContainer {
         intake = new IntakeSubsystem(new IntakeIOSim());
         feeder = new FeederSubsystem(new FeederIOSim());
         shooter = new ShooterSubsystem(new ShooterIOSim());
+        indexer = new IndexerSubsystem(new IndexerIOSim());
         break;
     }
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+    autoChooser.addOption(
+        "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
+    autoChooser.addOption(
+        "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
+    autoChooser.addOption(
+        "Drive SysId (Quasistatic Forward)",
+        drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    autoChooser.addOption(
+        "Drive SysId (Quasistatic Reverse)",
+        drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    autoChooser.addOption(
+        "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    autoChooser.addOption(
+        "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     SmartDashboard.putNumber("feederVolt", 5);
-    SmartDashboard.putNumber("shooterVolt", 4);
+    SmartDashboard.putNumber("shooterVolt", 5);
+    SmartDashboard.putNumber("indexerHorizontalVolt", 4);
+    SmartDashboard.putNumber("indexerVerticleVolt", 4);
 
     // Set up SysId routines
     configureButtonBindings();
@@ -132,9 +162,24 @@ public class RobotContainer {
                     ? Math.pow(controller.getLeftX(), 2)
                     : -Math.pow(controller.getLeftX(), 2),
             () -> -controller.getRightX()));
+    controller
+        .povUp()
+        .onTrue(
+            Commands.runOnce(
+                    () -> {
+                      Rotation2d heading =
+                          DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Red
+                              ? new Rotation2d(Math.PI)
+                              : new Rotation2d();
+
+                      drive.setPose(new Pose2d(drive.getPose().getTranslation(), heading));
+                    },
+                    drive)
+                .ignoringDisable(true));
     controller.a().whileTrue(new IntakeCommand(intake));
-    controller.b().whileTrue(new FeederCommand(feeder, SmartDashboard.getNumber("feederVolt", 0)));
-    controller.x().whileTrue(new ShootCommand(shooter, SmartDashboard.getNumber("shooterVolt", 0)));
+    controller.b().whileTrue(new FeederCommand(feeder));
+    controller.x().whileTrue(new ShootCommand(shooter));
+    controller.y().whileTrue(new IndexerCommand(indexer));
     controller.rightBumper().whileTrue(new IntakeDriveCommand(intake, 0.5));
     controller.rightTrigger().whileTrue(new IntakeDriveCommand(intake, -0.5));
   }

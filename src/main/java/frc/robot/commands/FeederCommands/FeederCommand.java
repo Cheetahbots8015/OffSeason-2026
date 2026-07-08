@@ -7,7 +7,7 @@ import frc.robot.subsystems.feeder.FeederSubsystem;
 public class FeederCommand extends Command {
 
   private final FeederSubsystem m_subsystem;
-  
+
   public FeederCommand(FeederSubsystem subsystem) {
     m_subsystem = subsystem;
     addRequirements(subsystem);
