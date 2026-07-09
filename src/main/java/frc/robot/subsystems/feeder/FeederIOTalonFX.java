@@ -46,8 +46,6 @@ public class FeederIOTalonFX implements FeederIO {
     feederConfigs.Slot0.kP = FeederConstants.feederkP;
     feederConfigs.Slot0.kI = FeederConstants.feederkI;
     feederConfigs.Slot0.kD = FeederConstants.feederkD;
-    feederConfigs.Slot0.kA = FeederConstants.feederkA;
-    feederConfigs.Slot0.kS = FeederConstants.feederkS;
     feederConfigs.Slot0.kV = FeederConstants.feederkV;
 
     // Apply the configuration to the motor

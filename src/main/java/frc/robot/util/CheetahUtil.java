@@ -1,5 +1,6 @@
 package frc.robot.util;
 
+import frc.robot.constants.TurretConstants;
 import java.util.function.DoubleSupplier;
 
 public class CheetahUtil {
@@ -56,19 +57,11 @@ public class CheetahUtil {
     return (meters - 0.362) * 6.0 / (0.005 * 30);
   }
 
-  // --- Hood Unit Conversions ---
+  public static double turretRotationsToDeg(double rotations) {
+    return rotations * TurretConstants.gearRatio * 360.0;
+  }
 
-  /**
-   * Converts hood motor rotations to degrees.
-   *
-   * @param rotations Motor rotations.
-   * @return Equivalent angle in degrees.
-   */
-
-  /**
-   * Converts hood target degrees to motor rotations.
-   *
-   * @param degrees Target angle in degrees.
-   * @return Equivalent motor rotations.
-   */
+  public static double turretDegToRotations(double degrees) {
+    return degrees / TurretConstants.gearRatio / 360.0;
+  }
 }

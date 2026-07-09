@@ -11,7 +11,5 @@ public class FeederConstants {
   public static final double feederkP = 0.15;
   public static final double feederkI = 0.00;
   public static final double feederkD = 0.00;
-  public static final double feederkA = 0.00;
-  public static final double feederkS = 0.00;
-  public static final double feederkV = 0.113;
+  public static final double feederkV = 0.125;
 }

@@ -26,11 +26,14 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
-import frc.robot.commands.FeederCommands.FeederCommand;
-import frc.robot.commands.IndexerCommands.IndexerCommand;
+import frc.robot.commands.FeederCommands.FeederVelocityVoltageCommand;
+import frc.robot.commands.IndexerCommands.IndexerVelocityVoltageCommand;
+import frc.robot.commands.IntakeCommands.IntakeArmCommand;
 import frc.robot.commands.IntakeCommands.IntakeCommand;
 import frc.robot.commands.IntakeCommands.IntakeDriveCommand;
 import frc.robot.commands.ShooterCommands.ShootCommand;
+import frc.robot.commands.ShooterCommands.ShootVelocityVoltageCommand;
+import frc.robot.commands.TurretCommands.TurretPositionVoltage;
 import frc.robot.constants.ContainerConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
@@ -49,6 +52,9 @@ import frc.robot.subsystems.intake.*;
 import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.shooter.ShooterIOTalonFX;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
+import frc.robot.subsystems.turret.TurretIOSim;
+import frc.robot.subsystems.turret.TurretIOTalonFX;
+import frc.robot.subsystems.turret.TurretSubsystem;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -66,6 +72,7 @@ public class RobotContainer {
   private final FeederSubsystem feeder;
   private final ShooterSubsystem shooter;
   private final IndexerSubsystem indexer;
+  private final TurretSubsystem turret;
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -84,6 +91,7 @@ public class RobotContainer {
         feeder = new FeederSubsystem(new FeederIOTalonFX());
         shooter = new ShooterSubsystem(new ShooterIOTalonFX());
         indexer = new IndexerSubsystem(new IndexerOTalonFX());
+        turret = new TurretSubsystem(new TurretIOTalonFX());
         break;
 
       case SIM:
@@ -99,6 +107,7 @@ public class RobotContainer {
         feeder = new FeederSubsystem(new FeederIOSim());
         shooter = new ShooterSubsystem(new ShooterIOSim());
         indexer = new IndexerSubsystem(new IndexerIOSim());
+        turret = new TurretSubsystem(new TurretIOSim());
         break;
 
       default:
@@ -114,6 +123,7 @@ public class RobotContainer {
         feeder = new FeederSubsystem(new FeederIOSim());
         shooter = new ShooterSubsystem(new ShooterIOSim());
         indexer = new IndexerSubsystem(new IndexerIOSim());
+        turret = new TurretSubsystem(new TurretIOSim());
         break;
     }
 
@@ -136,8 +146,12 @@ public class RobotContainer {
 
     SmartDashboard.putNumber("feederVolt", 5);
     SmartDashboard.putNumber("shooterVolt", 5);
+    SmartDashboard.putNumber("shooterVelocity", 250);
     SmartDashboard.putNumber("indexerHorizontalVolt", 4);
     SmartDashboard.putNumber("indexerVerticleVolt", 4);
+    SmartDashboard.putNumber("indexerHorizontalVelocity", 300);
+    SmartDashboard.putNumber("indexerVerticleVelocity", 300);
+    SmartDashboard.putNumber("feederVelocity", 50);
 
     // Set up SysId routines
     configureButtonBindings();
@@ -176,12 +190,18 @@ public class RobotContainer {
                     },
                     drive)
                 .ignoringDisable(true));
+
+    controller.povLeft().whileTrue(new TurretPositionVoltage(turret, -90));
+    controller.povRight().whileTrue(new TurretPositionVoltage(turret, 90));
+    controller.povDown().whileTrue(new TurretPositionVoltage(turret, 0));
     controller.a().whileTrue(new IntakeCommand(intake));
-    controller.b().whileTrue(new FeederCommand(feeder));
+    controller.b().whileTrue(new FeederVelocityVoltageCommand(feeder));
+    controller.b().whileTrue(new IndexerVelocityVoltageCommand(indexer));
     controller.x().whileTrue(new ShootCommand(shooter));
-    controller.y().whileTrue(new IndexerCommand(indexer));
-    controller.rightBumper().whileTrue(new IntakeDriveCommand(intake, 0.5));
+    controller.rightBumper().whileTrue(new IntakeDriveCommand(intake, 2));
     controller.rightTrigger().whileTrue(new IntakeDriveCommand(intake, -0.5));
+    controller.leftBumper().whileTrue(new IntakeArmCommand(intake, -75));
+    controller.leftTrigger().whileTrue(new ShootVelocityVoltageCommand(shooter));
   }
 
   /**

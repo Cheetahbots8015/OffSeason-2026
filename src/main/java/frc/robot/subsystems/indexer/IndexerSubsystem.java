@@ -41,4 +41,8 @@ public class IndexerSubsystem extends SubsystemBase {
   public void setMotorVoltage(double horivolts, double vertvolts) {
     io.setMotorVoltage(horivolts, vertvolts);
   }
+
+  public void VelocityVoltage(double horiradians, double vertradians) {
+    io.VelocityVoltage(horiradians, vertradians);
+  }
 }

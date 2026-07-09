@@ -20,4 +20,6 @@ public interface IndexerIO {
 
   /** Direct set motor voltage - single motor (applied to both/follower). */
   public default void setMotorVoltage(double horivolts, double vertvolts) {}
+
+  public default void VelocityVoltage(double horiradians, double vertradians) {}
 }

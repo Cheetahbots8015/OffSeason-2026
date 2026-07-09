@@ -20,4 +20,6 @@ public interface ShooterIO {
 
   /** Direct set motor voltage - single motor (applied to both/follower). */
   public default void setMotorVoltage(double volts) {}
+
+  public default void VelocityVoltage(double radians) {}
 }

@@ -3,6 +3,7 @@ package frc.robot.subsystems.indexer;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -17,6 +18,8 @@ import frc.robot.constants.IndexerConstants;
 public class IndexerOTalonFX implements IndexerIO {
   private final TalonFX horizontal;
   private final TalonFX verticle;
+
+  private VelocityVoltage m_VelocityVoltage = new VelocityVoltage(0).withSlot(0);
   // Status signals for telemetry and odometry
   private final StatusSignal<Angle> horizontalPosition;
   private final StatusSignal<AngularVelocity> horizontalVelocity;
@@ -49,6 +52,15 @@ public class IndexerOTalonFX implements IndexerIO {
         IndexerConstants.kVertInvert
             ? InvertedValue.CounterClockwise_Positive
             : InvertedValue.Clockwise_Positive;
+
+    horizontalConfigs.Slot0.kP = IndexerConstants.kP;
+    horizontalConfigs.Slot0.kI = IndexerConstants.kI;
+    horizontalConfigs.Slot0.kD = IndexerConstants.kD;
+    horizontalConfigs.Slot0.kV = IndexerConstants.kV;
+    verticleConfigs.Slot0.kP = IndexerConstants.kP;
+    verticleConfigs.Slot0.kI = IndexerConstants.kI;
+    verticleConfigs.Slot0.kD = IndexerConstants.kD;
+    verticleConfigs.Slot0.kV = IndexerConstants.kV;
 
     horizontal.getConfigurator().apply(horizontalConfigs);
     verticle.getConfigurator().apply(verticleConfigs);
@@ -105,5 +117,11 @@ public class IndexerOTalonFX implements IndexerIO {
   public void setMotorVoltage(double horivolts, double vertvolts) {
     verticle.setVoltage(vertvolts);
     horizontal.setVoltage(horivolts);
+  }
+
+  @Override
+  public void VelocityVoltage(double horiradians, double vertradians) {
+    verticle.setControl(m_VelocityVoltage.withVelocity(Units.radiansToRotations(vertradians)));
+    horizontal.setControl(m_VelocityVoltage.withVelocity(Units.radiansToRotations(horiradians)));
   }
 }

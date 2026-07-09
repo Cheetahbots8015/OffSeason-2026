@@ -16,17 +16,10 @@ public final class ShooterConstants {
   // Control slots / tuning
   public static final double kStatusUpdateFrequency = 50.0;
 
-  public static final double kLeftSlot_kP = 0.0;
-  public static final double kLeftSlot_kI = 0.0;
-  public static final double kLeftSlot_kD = 0.0;
-  public static final double kLeftSlot_kA = 0.0032085;
-  public static final double kLeftSlot_kS = 0.0;
-  public static final double kLeftSlot_kV = 0.020658;
-
-  public static final double kRightSlot_kP = 0.0;
-  public static final double kRightSlot_kI = 0.0;
-  public static final double kRightSlot_kD = 0.0;
-  public static final double kRightSlot_kA = 0.0032085;
-  public static final double kRightSlot_kS = 0.0;
-  public static final double kRightSlot_kV = 0.020658;
+  public static final double kP = 0.05;
+  public static final double kI = 0.0;
+  public static final double kD = 0.0;
+  public static final double kA = 0;
+  public static final double kS = 0.0;
+  public static final double kV = 0.13;
 }

@@ -40,6 +40,10 @@ public class IntakeSubsystem extends SubsystemBase {
     io.setFlywheelVoltage(volts);
   }
 
+  public void setArmPosition(double radians) {
+    io.setArmPosition(radians);
+  }
+
   public IntakeIOInputs getInput() {
     return inputs;
   }

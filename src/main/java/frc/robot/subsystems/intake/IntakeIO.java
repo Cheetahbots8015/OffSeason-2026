@@ -26,4 +26,6 @@ public interface IntakeIO {
   public default void setFlywheelVoltage(double volts) {}
 
   public default void setArmVoltage(double volts) {}
+
+  public default void setArmPosition(double radians) {}
 }

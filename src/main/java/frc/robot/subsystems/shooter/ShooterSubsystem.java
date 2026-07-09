@@ -45,4 +45,8 @@ public class ShooterSubsystem extends SubsystemBase {
   public double getMotorVelocity() {
     return inputs.rightVelocityRadPerSec;
   }
+
+  public void VelocityVoltage(double radians) {
+    io.VelocityVoltage(radians);
+  }
 }

@@ -5,7 +5,6 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -28,7 +27,6 @@ public class IntakeIOTalonFX implements IntakeIO {
   private TalonFXConfiguration armConfigs = new TalonFXConfiguration();
 
   final MotionMagicVoltage m_armRequest = new MotionMagicVoltage(0).withSlot(0);
-  final VelocityVoltage m_flywheelRequest = new VelocityVoltage(0).withSlot(0).withEnableFOC(true);
 
   private final StatusSignal<Angle> FlywheelPosition;
   private final StatusSignal<AngularVelocity> FlywheelVelocity;
@@ -77,6 +75,11 @@ public class IntakeIOTalonFX implements IntakeIO {
             ? InvertedValue.CounterClockwise_Positive
             : InvertedValue.Clockwise_Positive);
 
+    armConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    armConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 0;
+    armConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    armConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -12;
+
     // Set PID and feedforward constants from constants file
     armConfigs.Slot0.kP = IntakeConstants.armkP;
     armConfigs.Slot0.kI = IntakeConstants.armkI;
@@ -84,7 +87,9 @@ public class IntakeIOTalonFX implements IntakeIO {
     armConfigs.Slot0.kA = IntakeConstants.armkA;
     armConfigs.Slot0.kS = IntakeConstants.armkS;
     armConfigs.Slot0.kV = IntakeConstants.armkV;
-    armConfigs.Slot0.kG = IntakeConstants.armkG;
+
+    armConfigs.MotionMagic.MotionMagicCruiseVelocity = 20;
+    armConfigs.MotionMagic.MotionMagicAcceleration = 80;
 
     // Apply the configuration to the motor
     flywheel.getConfigurator().apply(flywheelConfigs);
@@ -116,7 +121,9 @@ public class IntakeIOTalonFX implements IntakeIO {
         FollowerAppliedVolts,
         FollowerCurrent,
         FollowerPosition,
-        FollowerVelocity,
+        FollowerVelocity);
+    BaseStatusSignal.setUpdateFrequencyForAll(
+        IntakeConstants.statusrFasterUpdateFrequency,
         ArmPosition,
         ArmVelocity,
         ArmAppliedVolts,
@@ -167,5 +174,10 @@ public class IntakeIOTalonFX implements IntakeIO {
   @Override
   public void setArmVoltage(double volts) {
     arm.setVoltage(volts);
+  }
+
+  @Override
+  public void setArmPosition(double radians) {
+    arm.setControl(m_armRequest.withPosition(Units.radiansToRotations(radians)));
   }
 }
