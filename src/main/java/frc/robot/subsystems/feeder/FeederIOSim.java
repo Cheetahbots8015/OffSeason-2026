@@ -3,7 +3,6 @@ package frc.robot.subsystems.feeder;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
 public class FeederIOSim implements FeederIO {
@@ -24,8 +23,7 @@ public class FeederIOSim implements FeederIO {
 
     // Update motor inputs
     inputs.FeederPositionRad = motorSim.getAngularPositionRad();
-    inputs.FeederVelocityRotPerSec =
-        Units.radiansToRotations(motorSim.getAngularVelocityRadPerSec());
+    inputs.FeederVelocityRadPerSec = motorSim.getAngularVelocityRadPerSec();
     inputs.FeederAppliedVolts = motorSim.getInputVoltage();
     inputs.FeederCurrentAmps = Math.abs(motorSim.getCurrentDrawAmps());
   }

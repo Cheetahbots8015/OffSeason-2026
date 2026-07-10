@@ -71,7 +71,7 @@ public class FeederIOTalonFX implements FeederIO {
     BaseStatusSignal.refreshAll(FeederPosition, FeederVelocity, FeederAppliedVolts, FeederCurrent);
     // Update motor inputs
     inputs.FeederPositionRad = Units.rotationsToRadians(FeederPosition.getValueAsDouble());
-    inputs.FeederVelocityRotPerSec = FeederVelocity.getValueAsDouble();
+    inputs.FeederVelocityRadPerSec = Units.rotationsToRadians(FeederVelocity.getValueAsDouble());
     inputs.FeederAppliedVolts = FeederAppliedVolts.getValueAsDouble();
     inputs.FeederCurrentAmps = FeederCurrent.getValueAsDouble();
   }
@@ -83,6 +83,6 @@ public class FeederIOTalonFX implements FeederIO {
 
   @Override
   public void setFeederVelocityVoltage(double velocity) {
-    feeder.setControl(m_velocity.withVelocity(velocity));
+    feeder.setControl(m_velocity.withVelocity(Units.radiansToRotations(velocity)));
   }
 }

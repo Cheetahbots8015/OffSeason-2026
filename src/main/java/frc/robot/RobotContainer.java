@@ -152,7 +152,7 @@ public class RobotContainer {
     SmartDashboard.putNumber("indexerVerticleVolt", 4);
     SmartDashboard.putNumber("indexerHorizontalVelocity", 250);
     SmartDashboard.putNumber("indexerVerticleVelocity", 250);
-    SmartDashboard.putNumber("feederVelocity", 50);
+    SmartDashboard.putNumber("feederVelocity", 300);
 
     // Set up SysId routines
     configureButtonBindings();

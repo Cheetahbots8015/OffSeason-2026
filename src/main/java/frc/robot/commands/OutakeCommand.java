@@ -21,7 +21,7 @@ public class OutakeCommand extends Command {
   @Override
   public void execute() {
     m_indexer.VelocityVoltage(-250, -250);
-    m_feeder.setFeederVelocityVoltage(-50);
+    m_feeder.setFeederVelocityVoltage(-300);
   }
 
   @Override

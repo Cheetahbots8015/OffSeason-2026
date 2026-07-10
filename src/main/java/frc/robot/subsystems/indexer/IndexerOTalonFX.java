@@ -53,14 +53,14 @@ public class IndexerOTalonFX implements IndexerIO {
             ? InvertedValue.CounterClockwise_Positive
             : InvertedValue.Clockwise_Positive;
 
-    horizontalConfigs.Slot0.kP = IndexerConstants.kP;
-    horizontalConfigs.Slot0.kI = IndexerConstants.kI;
-    horizontalConfigs.Slot0.kD = IndexerConstants.kD;
-    horizontalConfigs.Slot0.kV = IndexerConstants.kV;
-    verticleConfigs.Slot0.kP = IndexerConstants.kP;
-    verticleConfigs.Slot0.kI = IndexerConstants.kI;
-    verticleConfigs.Slot0.kD = IndexerConstants.kD;
-    verticleConfigs.Slot0.kV = IndexerConstants.kV;
+    horizontalConfigs.Slot0.kP = IndexerConstants.kPh;
+    horizontalConfigs.Slot0.kI = IndexerConstants.kIh;
+    horizontalConfigs.Slot0.kD = IndexerConstants.kDh;
+    horizontalConfigs.Slot0.kV = IndexerConstants.kVh;
+    verticleConfigs.Slot0.kP = IndexerConstants.kPv;
+    verticleConfigs.Slot0.kI = IndexerConstants.kIv;
+    verticleConfigs.Slot0.kD = IndexerConstants.kDv;
+    verticleConfigs.Slot0.kV = IndexerConstants.kVv;
 
     horizontal.getConfigurator().apply(horizontalConfigs);
     verticle.getConfigurator().apply(verticleConfigs);

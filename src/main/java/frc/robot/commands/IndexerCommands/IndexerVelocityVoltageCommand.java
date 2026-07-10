@@ -1,6 +1,7 @@
 package frc.robot.commands.IndexerCommands;
 
-import edu.wpi.first.math.filter.MedianFilter;
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -10,7 +11,7 @@ import frc.robot.subsystems.indexer.IndexerSubsystem;
 public class IndexerVelocityVoltageCommand extends Command {
 
   private final IndexerSubsystem m_subsystem;
-  private MedianFilter m_filter;
+  private Debouncer jam_debouncer;
   private CommandXboxController m_controller;
 
   public IndexerVelocityVoltageCommand(
@@ -22,20 +23,21 @@ public class IndexerVelocityVoltageCommand extends Command {
 
   @Override
   public void initialize() {
-    m_filter = new MedianFilter(20);
-    for (int i = 0; i < 10; i++) {
-      m_filter.calculate(250);
-    }
+    jam_debouncer = new Debouncer(0.5, DebounceType.kRising);
+    jam_debouncer.calculate(false);
     SmartDashboard.putBoolean("Rumble", false);
     m_controller.setRumble(RumbleType.kBothRumble, 0);
   }
 
   @Override
   public void execute() {
+    boolean isJammed =
+        jam_debouncer.calculate(m_subsystem.getInput().verticleVelocityRadPerSec < 280);
     m_subsystem.VelocityVoltage(
-        SmartDashboard.getNumber("indexerHorizontalVelocity", 0),
+        isJammed ? 0 : SmartDashboard.getNumber("indexerHorizontalVelocity", 0),
         SmartDashboard.getNumber("indexerVerticleVelocity", 0));
-    if (m_filter.calculate(m_subsystem.getInput().verticleVelocityRadPerSec) < 280) {
+    // uses a debouncer, but why magic number 280?
+    if (isJammed) {
       m_controller.setRumble(RumbleType.kBothRumble, 1);
       SmartDashboard.putBoolean("Rumble", true);
     } else {
