@@ -31,7 +31,8 @@ import frc.robot.commands.IndexerCommands.IndexerVelocityVoltageCommand;
 import frc.robot.commands.IntakeCommands.IntakeArmCommand;
 import frc.robot.commands.IntakeCommands.IntakeCommand;
 import frc.robot.commands.IntakeCommands.IntakeDriveCommand;
-import frc.robot.commands.ShooterCommands.ShootCommand;
+import frc.robot.commands.IntakeCommands.IntakeSHMCommand;
+import frc.robot.commands.OutakeCommand;
 import frc.robot.commands.ShooterCommands.ShootVelocityVoltageCommand;
 import frc.robot.commands.TurretCommands.TurretPositionVoltage;
 import frc.robot.constants.ContainerConstants;
@@ -149,8 +150,8 @@ public class RobotContainer {
     SmartDashboard.putNumber("shooterVelocity", 250);
     SmartDashboard.putNumber("indexerHorizontalVolt", 4);
     SmartDashboard.putNumber("indexerVerticleVolt", 4);
-    SmartDashboard.putNumber("indexerHorizontalVelocity", 300);
-    SmartDashboard.putNumber("indexerVerticleVelocity", 300);
+    SmartDashboard.putNumber("indexerHorizontalVelocity", 250);
+    SmartDashboard.putNumber("indexerVerticleVelocity", 250);
     SmartDashboard.putNumber("feederVelocity", 50);
 
     // Set up SysId routines
@@ -196,8 +197,9 @@ public class RobotContainer {
     controller.povDown().whileTrue(new TurretPositionVoltage(turret, 0));
     controller.a().whileTrue(new IntakeCommand(intake));
     controller.b().whileTrue(new FeederVelocityVoltageCommand(feeder));
-    controller.b().whileTrue(new IndexerVelocityVoltageCommand(indexer));
-    controller.x().whileTrue(new ShootCommand(shooter));
+    controller.b().whileTrue(new IndexerVelocityVoltageCommand(indexer, controller));
+    controller.b().whileTrue(new IntakeSHMCommand(intake));
+    controller.x().whileTrue(new OutakeCommand(indexer, feeder));
     controller.rightBumper().whileTrue(new IntakeDriveCommand(intake, 2));
     controller.rightTrigger().whileTrue(new IntakeDriveCommand(intake, -0.5));
     controller.leftBumper().whileTrue(new IntakeArmCommand(intake, -75));

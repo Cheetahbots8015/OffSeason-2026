@@ -14,7 +14,7 @@ public final class TurretConstants {
   // Control tuning
   public static final double kStatusUpdateFrequency = 50.0;
   public static final double kSlot_kP = 2;
-  public static final double kSlot_kI = 1;
+  public static final double kSlot_kI = 0; //0?
   public static final double kSlot_kD = 0.0;
   public static final double kSlot_kS = 0;
   public static final double kSlot_kV = 0.15;

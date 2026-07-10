@@ -1,5 +1,6 @@
 package frc.robot.subsystems.turret;
 
+import com.ctre.phoenix6.hardware.Pigeon2;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.Units;
@@ -9,12 +10,14 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.constants.TurretConstants;
 import org.littletonrobotics.junction.Logger;
 
 public class TurretSubsystem extends SubsystemBase {
   private final TurretIO io;
   private final TurretIOInputsAutoLogged inputs = new TurretIOInputsAutoLogged();
   private final SysIdRoutine sysId;
+  private final Pigeon2 pigeon;
 
   private boolean isRedAlliance = false;
   private boolean inNeutralZone = false;
@@ -40,13 +43,15 @@ public class TurretSubsystem extends SubsystemBase {
                 (state) -> Logger.recordOutput("Turret/SysIdState", state.toString())),
             new SysIdRoutine.Mechanism(
                 (voltage) -> io.setMotorVoltage(voltage.in(Units.Volt)), null, this));
+    pigeon = new Pigeon2(TurretConstants.kPigeonId);
+    pigeon.setYaw(0);
     if (DriverStation.getAlliance().isPresent()
         && DriverStation.getAlliance().get() == Alliance.Red) {
       target = RED_TARGET;
-      pigeon_offset = 90;
+      pigeon_offset = 150;
     } else {
       target = BLUE_TARGET;
-      pigeon_offset = -90;
+      pigeon_offset = -30;
     }
   }
 
@@ -69,7 +74,7 @@ public class TurretSubsystem extends SubsystemBase {
         currentPose.plus(
             offset.rotateBy(new Rotation2d(SmartDashboard.getNumber("rotation", 0.0))));
 
-    double shooterPosDegrees = SmartDashboard.getNumber("shooter/pigeon", 0.0);
+    double shooterPosDegrees = pigeon.getYaw().getValueAsDouble();
 
     if (DriverStation.getAlliance().isPresent()
         && DriverStation.getAlliance().get() == Alliance.Red) {
