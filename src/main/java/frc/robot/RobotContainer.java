@@ -33,9 +33,11 @@ import frc.robot.commands.IntakeCommands.IntakeCommand;
 import frc.robot.commands.IntakeCommands.IntakeDriveCommand;
 import frc.robot.commands.IntakeCommands.IntakeSHMCommand;
 import frc.robot.commands.OutakeCommand;
+import frc.robot.commands.ShooterCommands.ShootOnMoveCommand;
 import frc.robot.commands.ShooterCommands.ShootVelocityVoltageCommand;
 import frc.robot.commands.TurretCommands.TurretPositionVoltage;
 import frc.robot.constants.ContainerConstants;
+import frc.robot.constants.ShootOnMoveConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
@@ -56,6 +58,7 @@ import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.turret.TurretIOSim;
 import frc.robot.subsystems.turret.TurretIOTalonFX;
 import frc.robot.subsystems.turret.TurretSubsystem;
+import frc.robot.util.ShootOnMoveCalculator;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -74,6 +77,7 @@ public class RobotContainer {
   private final ShooterSubsystem shooter;
   private final IndexerSubsystem indexer;
   private final TurretSubsystem turret;
+  private final ShootOnMoveCalculator shootOnMoveCalculator;
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -127,6 +131,10 @@ public class RobotContainer {
         turret = new TurretSubsystem(new TurretIOSim());
         break;
     }
+
+    shootOnMoveCalculator =
+        new ShootOnMoveCalculator(
+            ShootOnMoveConstants.kRedTarget, ShootOnMoveConstants.kBlueTarget);
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -196,6 +204,7 @@ public class RobotContainer {
     controller.povRight().whileTrue(new TurretPositionVoltage(turret, 90));
     controller.povDown().whileTrue(new TurretPositionVoltage(turret, 0));
     controller.a().whileTrue(new IntakeCommand(intake));
+    controller.y().whileTrue(new ShootOnMoveCommand(drive, turret, shooter, shootOnMoveCalculator));
     controller.b().whileTrue(new FeederVelocityVoltageCommand(feeder));
     controller.b().whileTrue(new IndexerVelocityVoltageCommand(indexer, controller));
     controller.b().whileTrue(new IntakeSHMCommand(intake));

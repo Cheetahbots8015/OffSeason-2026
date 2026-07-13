@@ -31,11 +31,11 @@ public class IndexerVelocityVoltageCommand extends Command {
 
   @Override
   public void execute() {
-    //TODO:use torque current to detect jam
+    // TODO:use torque current to detect jam
     boolean isJammed =
         jam_debouncer.calculate(m_subsystem.getInput().verticleVelocityRadPerSec < 280);
     m_subsystem.VelocityVoltage(
-        //isJammed ? 0 : SmartDashboard.getNumber("indexerHorizontalVelocity", 0),
+        // isJammed ? 0 : SmartDashboard.getNumber("indexerHorizontalVelocity", 0),
         SmartDashboard.getNumber("indexerHorizontalVelocity", 0),
         SmartDashboard.getNumber("indexerVerticleVelocity", 0));
     // uses a debouncer, but why magic number 280?
