@@ -16,7 +16,6 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -27,15 +26,13 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
-import frc.robot.commands.FeederCommands.FeederVelocityVoltageCommand;
-import frc.robot.commands.IndexerCommands.IndexerVelocityVoltageCommand;
 import frc.robot.commands.IntakeCommands.IntakeArmCommand;
 import frc.robot.commands.IntakeCommands.IntakeCommand;
 import frc.robot.commands.IntakeCommands.IntakeDriveCommand;
 import frc.robot.commands.IntakeCommands.IntakeSHMCommand;
 import frc.robot.commands.OutakeCommand;
-import frc.robot.commands.ShooterCommands.ShootOnMoveCommand;
-import frc.robot.commands.ShooterCommands.ShootVelocityVoltageCommand;
+import frc.robot.commands.ShooterCommands.ShootOnMoveDefaultCommand;
+import frc.robot.commands.ShooterCommands.ShootOnMoveTriggerCommand;
 import frc.robot.commands.TurretCommands.TurretPositionVoltage;
 import frc.robot.constants.ContainerConstants;
 import frc.robot.constants.ShootOnMoveConstants;
@@ -186,7 +183,6 @@ public class RobotContainer {
                     ? Math.pow(controller.getLeftX(), 2)
                     : -Math.pow(controller.getLeftX(), 2),
             () -> -controller.getRightX()));
-    // TODO: 记得改
     controller
         .povUp()
         .onTrue(
@@ -197,18 +193,21 @@ public class RobotContainer {
                               ? new Rotation2d(Math.PI)
                               : new Rotation2d();
 
-                      drive.setPose(new Pose2d(new Translation2d(0, 0), heading));
+                      drive.setPose(new Pose2d(drive.getPose().getTranslation(), heading));
                     },
                     drive)
                 .ignoringDisable(true));
 
-    controller.povLeft().whileTrue(new TurretPositionVoltage(turret, -90));
-    controller.povRight().whileTrue(new TurretPositionVoltage(turret, 60));
     controller.povDown().whileTrue(new TurretPositionVoltage(turret, 0));
-    controller.a().whileTrue(new IntakeCommand(intake));
-    controller.y().whileTrue(new ShootOnMoveCommand(drive, turret, shooter, shootOnMoveCalculator));
+    controller.leftTrigger().whileTrue(new IntakeCommand(intake));
+    turret.setDefaultCommand(new ShootOnMoveDefaultCommand(drive, turret, shootOnMoveCalculator));
     controller
-        .y()
+        .rightTrigger()
+        .whileTrue(
+            new ShootOnMoveTriggerCommand(
+                drive, turret, shooter, indexer, feeder, shootOnMoveCalculator));
+    controller
+        .rightTrigger()
         .whileTrue(
             DriveCommands.joystickDrive(
                 drive,
@@ -220,15 +219,11 @@ public class RobotContainer {
                     -controller.getLeftX() > 0
                         ? Math.pow(controller.getLeftX(), 2) * 0.5
                         : -Math.pow(controller.getLeftX(), 2) * 0.5,
-                () -> -controller.getRightX()));
-    controller.b().whileTrue(new FeederVelocityVoltageCommand(feeder));
-    controller.b().whileTrue(new IndexerVelocityVoltageCommand(indexer, controller));
-    controller.b().whileTrue(new IntakeSHMCommand(intake));
+                () -> -controller.getRightX() * 0.2));
+    controller.rightTrigger().whileTrue(new IntakeSHMCommand(intake));
     controller.x().whileTrue(new OutakeCommand(indexer, feeder));
     controller.rightBumper().whileTrue(new IntakeDriveCommand(intake, 2));
-    controller.rightTrigger().whileTrue(new IntakeDriveCommand(intake, -0.5));
     controller.leftBumper().whileTrue(new IntakeArmCommand(intake, -75));
-    controller.leftTrigger().whileTrue(new ShootVelocityVoltageCommand(shooter));
   }
 
   /**

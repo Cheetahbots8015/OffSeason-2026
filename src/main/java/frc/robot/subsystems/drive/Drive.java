@@ -298,26 +298,92 @@ public class Drive extends SubsystemBase {
       validateID = DriveConstants.redTags;
     }
     try {
+      LimelightHelpers.SetRobotOrientation(
+          "limelight-swerve",
+          poseEstimator.getEstimatedPosition().getRotation().getDegrees(),
+          0,
+          0,
+          0,
+          0,
+          0);
       doRejectUpdate = false;
-      LimelightHelpers.SetFiducialIDFiltersOverride("limelight", validateID);
-      LimelightHelpers.PoseEstimate mt2 =
-          LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
-      if (mt2.tagCount == 0) {
+      LimelightHelpers.SetFiducialIDFiltersOverride("limelight-swerve", validateID);
+      LimelightHelpers.PoseEstimate mt2_swerve =
+          LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-swerve");
+      if (mt2_swerve.tagCount == 0) {
         doRejectUpdate = true;
       } else {
-        doRejectUpdate = shouldReject(mt2, validateID);
+        doRejectUpdate = shouldReject(mt2_swerve, validateID);
       }
       if (!doRejectUpdate) {
         poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(5, 5, 9999999));
-        poseEstimator.addVisionMeasurement(mt2.pose, mt2.timestampSeconds);
+        poseEstimator.addVisionMeasurement(mt2_swerve.pose, mt2_swerve.timestampSeconds);
       }
-      Logger.recordOutput("LL/pose", mt2.pose);
-      Logger.recordOutput("LL/timestamp", mt2.timestampSeconds);
-      Logger.recordOutput("LL/avgdist", mt2.avgTagDist);
-      Logger.recordOutput("LL/latency", mt2.latency);
-
+      Logger.recordOutput("LL/Swerve/pose", mt2_swerve.pose);
+      Logger.recordOutput("LL/Swerve/timestamp", mt2_swerve.timestampSeconds);
+      Logger.recordOutput("LL/Swerve/avgdist", mt2_swerve.avgTagDist);
+      Logger.recordOutput("LL/Swerve/latency", mt2_swerve.latency);
     } catch (Exception e) {
-      // TODO: handle exception
+
+    }
+    try {
+      LimelightHelpers.SetRobotOrientation(
+          "limelight-left",
+          poseEstimator.getEstimatedPosition().getRotation().getDegrees(),
+          0,
+          0,
+          0,
+          0,
+          0);
+      doRejectUpdate = false;
+      Logger.recordOutput("LL/Left/connected", true);
+      LimelightHelpers.SetFiducialIDFiltersOverride("limelight-left", validateID);
+      LimelightHelpers.PoseEstimate mt2_left =
+          LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-left");
+      if (mt2_left.tagCount == 0) {
+        doRejectUpdate = true;
+      } else {
+        doRejectUpdate = shouldReject(mt2_left, validateID);
+      }
+      if (!doRejectUpdate) {
+        poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(3, 3, 9999999));
+        poseEstimator.addVisionMeasurement(mt2_left.pose, mt2_left.timestampSeconds);
+        Logger.recordOutput("LL/Left/pose", mt2_left.pose);
+        Logger.recordOutput("LL/Left/timestamp", mt2_left.timestampSeconds);
+        Logger.recordOutput("LL/Left/avgdist", mt2_left.avgTagDist);
+        Logger.recordOutput("LL/Left/latency", mt2_left.latency);
+      }
+    } catch (Exception e) {
+
+    }
+    try {
+      LimelightHelpers.SetRobotOrientation(
+          "limelight-rear",
+          poseEstimator.getEstimatedPosition().getRotation().getDegrees(),
+          0,
+          0,
+          0,
+          0,
+          0);
+      doRejectUpdate = false;
+      LimelightHelpers.SetFiducialIDFiltersOverride("limelight-rear", validateID);
+      LimelightHelpers.PoseEstimate mt2_rear =
+          LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-rear");
+      if (mt2_rear.tagCount == 0) {
+        doRejectUpdate = true;
+      } else {
+        doRejectUpdate = shouldReject(mt2_rear, validateID);
+      }
+      if (!doRejectUpdate) {
+        poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(3, 3, 9999999));
+        poseEstimator.addVisionMeasurement(mt2_rear.pose, mt2_rear.timestampSeconds);
+      }
+      Logger.recordOutput("LL/Rear/pose", mt2_rear.pose);
+      Logger.recordOutput("LL/Rear/timestamp", mt2_rear.timestampSeconds);
+      Logger.recordOutput("LL/Rear/avgdist", mt2_rear.avgTagDist);
+      Logger.recordOutput("LL/Rear/latency", mt2_rear.latency);
+    } catch (Exception e) {
+
     }
 
     SmartDashboard.putNumberArray(

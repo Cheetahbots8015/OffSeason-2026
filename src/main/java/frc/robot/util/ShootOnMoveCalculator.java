@@ -186,7 +186,7 @@ public class ShootOnMoveCalculator {
           Math.max(0.0, distance - ShootOnMoveConstants.kTargetDistanceOffsetMeters);
       double flywheelSpeed = distanceToFlywheelSpeed.get(lookupDistance);
       double projectileSpeed = projectileSpeedSlope * flywheelSpeed + projectileSpeedIntercept;
-      projectileSpeed *= Math.cos(Math.toRadians(71.0));
+      projectileSpeed *= Math.cos(Math.toRadians(65.0));
       // TODO: hood position
       double shotTime = lookupDistance / projectileSpeed;
 

@@ -73,7 +73,11 @@ public class TurretSubsystem extends SubsystemBase {
     return sysId.dynamic(direction);
   }
 
-  public double getPosition() {
+  public double getMotorPosition() {
     return inputs.motorPositionDeg;
+  }
+
+  public double getPosition() {
+    return inputs.turretPositionDeg;
   }
 }

@@ -44,6 +44,9 @@ public class TurretIOTalonFX implements TurretIO {
         CheetahUtil.turretDegToRotations(180);
     motorConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
 
+    motorConfigs.CurrentLimits.StatorCurrentLimit = 40;
+    motorConfigs.CurrentLimits.StatorCurrentLimitEnable = true;
+
     motorConfigs.Slot0.kP = TurretConstants.kSlot_kP;
     motorConfigs.Slot0.kI = TurretConstants.kSlot_kI;
     motorConfigs.Slot0.kD = TurretConstants.kSlot_kD;
