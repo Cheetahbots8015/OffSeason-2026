@@ -15,12 +15,12 @@ public class IndexerConstants {
   public static final double kPv = 0.6;
   public static final double kIv = 0.005;
   public static final double kDv = 0.0;
-  public static final double kVv = 0.25;
+  public static final double kVv = 0.2;
 
   public static final double kPh = 0.6;
   public static final double kIh = 0.005;
   public static final double kDh = 0.0;
-  public static final double kVh = 0.25;
+  public static final double kVh = 0.2;
 
   public static final double kStatusUpdateFrequency = 50.0;
 }

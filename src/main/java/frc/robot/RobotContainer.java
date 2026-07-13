@@ -16,6 +16,7 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -185,6 +186,7 @@ public class RobotContainer {
                     ? Math.pow(controller.getLeftX(), 2)
                     : -Math.pow(controller.getLeftX(), 2),
             () -> -controller.getRightX()));
+    // TODO: 记得改
     controller
         .povUp()
         .onTrue(
@@ -195,16 +197,30 @@ public class RobotContainer {
                               ? new Rotation2d(Math.PI)
                               : new Rotation2d();
 
-                      drive.setPose(new Pose2d(drive.getPose().getTranslation(), heading));
+                      drive.setPose(new Pose2d(new Translation2d(0, 0), heading));
                     },
                     drive)
                 .ignoringDisable(true));
 
     controller.povLeft().whileTrue(new TurretPositionVoltage(turret, -90));
-    controller.povRight().whileTrue(new TurretPositionVoltage(turret, 90));
+    controller.povRight().whileTrue(new TurretPositionVoltage(turret, 60));
     controller.povDown().whileTrue(new TurretPositionVoltage(turret, 0));
     controller.a().whileTrue(new IntakeCommand(intake));
     controller.y().whileTrue(new ShootOnMoveCommand(drive, turret, shooter, shootOnMoveCalculator));
+    controller
+        .y()
+        .whileTrue(
+            DriveCommands.joystickDrive(
+                drive,
+                () ->
+                    -controller.getLeftY() > 0
+                        ? Math.pow(controller.getLeftY(), 2) * 0.5
+                        : -Math.pow(controller.getLeftY(), 2) * 0.5,
+                () ->
+                    -controller.getLeftX() > 0
+                        ? Math.pow(controller.getLeftX(), 2) * 0.5
+                        : -Math.pow(controller.getLeftX(), 2) * 0.5,
+                () -> -controller.getRightX()));
     controller.b().whileTrue(new FeederVelocityVoltageCommand(feeder));
     controller.b().whileTrue(new IndexerVelocityVoltageCommand(indexer, controller));
     controller.b().whileTrue(new IntakeSHMCommand(intake));

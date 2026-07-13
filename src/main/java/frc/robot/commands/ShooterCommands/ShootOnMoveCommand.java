@@ -2,6 +2,8 @@ package frc.robot.commands.ShooterCommands;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
@@ -47,11 +49,15 @@ public class ShootOnMoveCommand extends Command {
     // Convert field-relative aim angle to turret-relative degrees.
     Rotation2d robotHeading = drive.getRotation();
     double turretSetpointDeg = params.turretAngle.minus(robotHeading).getDegrees();
-    turretSetpointDeg = wrapTo180(turretSetpointDeg);
 
     double shooterSetpointRadPerSec = params.flywheelSpeedRps * 2.0 * Math.PI;
 
-    turret.setPosition(turretSetpointDeg);
+    double turretOffset =
+        DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red
+            ? -120
+            : 60;
+
+    turret.setPosition(wrapTo180(turretSetpointDeg + turretOffset));
     shooter.VelocityVoltage(shooterSetpointRadPerSec);
 
     Logger.recordOutput("ShootOnMove/EffectiveTarget", params.effectiveTarget);

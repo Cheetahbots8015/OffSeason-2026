@@ -14,7 +14,7 @@ public final class ShootOnMoveConstants {
       new Translation2d((5.229174199999999 + 4.0218614) / 2, 4.0346376);
 
   /** Turret shooter exit point relative to the robot center of rotation (meters). */
-  public static final Translation2d kTurretOffsetMeters = new Translation2d(0.2, 0.0);
+  public static final Translation2d kTurretOffsetMeters = new Translation2d(0.122, -0.122);
 
   /** Number of iterations for the effective-target convergence solver. */
   public static final int kConvergenceIterations = 5;

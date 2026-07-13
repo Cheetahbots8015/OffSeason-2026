@@ -55,8 +55,8 @@ class ShootOnMoveCalculatorTest {
 
   @Test
   void fartherDistanceUsesHigherFlywheelSpeed() {
-    Pose2d closePose = new Pose2d(new Translation2d(5.0, 4.0346), new Rotation2d());
-    Pose2d farPose = new Pose2d(new Translation2d(2.0, 4.0346), new Rotation2d());
+    Pose2d closePose = new Pose2d(new Translation2d(2.0, 4.0346), new Rotation2d());
+    Pose2d farPose = new Pose2d(new Translation2d(0.0, 4.0346), new Rotation2d());
     ChassisSpeeds speeds = new ChassisSpeeds();
 
     double closeSpeed = calculator.calculate(closePose, speeds).flywheelSpeedRps;

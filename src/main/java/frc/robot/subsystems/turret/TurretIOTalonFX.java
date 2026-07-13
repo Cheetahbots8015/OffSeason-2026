@@ -57,8 +57,6 @@ public class TurretIOTalonFX implements TurretIO {
     motorConfigs.MotionMagic.MotionMagicAcceleration = 40;
 
     motor.getConfigurator().apply(motorConfigs);
-    motor.setSafetyEnabled(true);
-    motor.setExpiration(1.0);
     motorPosition = motor.getPosition();
     motorVelocity = motor.getVelocity();
     motorAppliedVolts = motor.getMotorVoltage();
@@ -89,13 +87,11 @@ public class TurretIOTalonFX implements TurretIO {
   @Override
   public void setMotorVoltage(double volts) {
     motor.setVoltage(volts);
-    motor.feed();
   }
 
   @Override
   public void setPosition(double positionDeg) {
     // Talon expects rotations for position commands
     motor.setControl(m_request.withPosition(CheetahUtil.turretDegToRotations(positionDeg)));
-    motor.feed();
   }
 }

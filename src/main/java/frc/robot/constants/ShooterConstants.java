@@ -25,6 +25,6 @@ public final class ShooterConstants {
 
   // Gear ratio
   // TODO: update gear ratio
-  public static final double kGear = 1.0;
-  public static final double kRadius = 0.05;
+  public static final double kGear = 1 / 1.2;
+  public static final double kRadius = 0.0025;
 }

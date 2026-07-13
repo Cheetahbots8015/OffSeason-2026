@@ -60,7 +60,8 @@ public class ShootOnMoveCalculator {
                     distanceMeters * ShootOnMoveConstants.kFlywheelCurveSlope
                         + ShootOnMoveConstants.kFlywheelCurveIntercept)
                 / (2.0 * Math.PI);
-        double projectileSpeedMps = flywheelRps * ShooterConstants.kGear * ShooterConstants.kRadius;
+        double projectileSpeedMps =
+            flywheelRps * ShooterConstants.kGear * ShooterConstants.kRadius * 2 * Math.PI;
         calibrationData.add(new double[] {distanceMeters, flywheelRps, projectileSpeedMps});
       }
     }
@@ -81,8 +82,8 @@ public class ShootOnMoveCalculator {
   /**
    * Loads measured calibration data from {@code deploy/shoot-on-move-data.csv}.
    *
-   * <p>Expected columns: distanceMeters, flywheelRps, projectileSpeedMps. If the file is missing
-   * or malformed, an empty list is returned.
+   * <p>Expected columns: distanceMeters, flywheelRps, projectileSpeedMps. If the file is missing or
+   * malformed, an empty list is returned.
    *
    * @return list of calibration triples {distanceMeters, flywheelRps, projectileSpeedMps}
    */
@@ -128,7 +129,7 @@ public class ShootOnMoveCalculator {
       List<Double> flywheelRpsValues, List<Double> projectileSpeedValues) {
     int n = flywheelRpsValues.size();
     if (n < 2) {
-      projectileSpeedSlope = ShooterConstants.kGear * ShooterConstants.kRadius;
+      projectileSpeedSlope = ShooterConstants.kGear * ShooterConstants.kRadius * Math.PI * 2.0;
       projectileSpeedIntercept = 0.0;
       return;
     }
@@ -185,6 +186,8 @@ public class ShootOnMoveCalculator {
           Math.max(0.0, distance - ShootOnMoveConstants.kTargetDistanceOffsetMeters);
       double flywheelSpeed = distanceToFlywheelSpeed.get(lookupDistance);
       double projectileSpeed = projectileSpeedSlope * flywheelSpeed + projectileSpeedIntercept;
+      projectileSpeed *= Math.cos(Math.toRadians(71.0));
+      // TODO: hood position
       double shotTime = lookupDistance / projectileSpeed;
 
       // Velocity of the shooter exit point due to chassis translation.
