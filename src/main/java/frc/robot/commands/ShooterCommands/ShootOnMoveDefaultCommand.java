@@ -4,6 +4,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.hood.HoodSubsystem;
 import frc.robot.subsystems.turret.TurretSubsystem;
 import frc.robot.util.ShootOnMoveCalculator;
 import org.littletonrobotics.junction.Logger;
@@ -18,15 +19,17 @@ import org.littletonrobotics.junction.Logger;
 public class ShootOnMoveDefaultCommand extends Command {
   private final Drive drive;
   private final TurretSubsystem turret;
+  private final HoodSubsystem hood;
   private final ShootOnMoveCalculator calculator;
 
   public ShootOnMoveDefaultCommand(
-      Drive drive, TurretSubsystem turret, ShootOnMoveCalculator calculator) {
+      Drive drive, TurretSubsystem turret, HoodSubsystem hood, ShootOnMoveCalculator calculator) {
     this.drive = drive;
     this.turret = turret;
+    this.hood = hood;
     this.calculator = calculator;
 
-    addRequirements(turret);
+    addRequirements(turret, hood);
   }
 
   @Override
@@ -47,12 +50,14 @@ public class ShootOnMoveDefaultCommand extends Command {
     double turretOffset = 60;
 
     turret.setPosition(wrapTo180(turretSetpointDeg + turretOffset));
+    // hood.setPosition(Math.max(0.0, Math.min(params.hoodPosition, 60.0)));
 
     Logger.recordOutput("ShootOnMove/EffectiveTarget", params.effectiveTarget);
     Logger.recordOutput("ShootOnMove/TurretSetpointDeg", turretSetpointDeg);
     Logger.recordOutput("ShootOnMove/FinalDegree", wrapTo180(turretSetpointDeg + turretOffset));
     Logger.recordOutput("ShootOnMove/ShooterSetpointRadPerSec", shooterSetpointRadPerSec);
     Logger.recordOutput("ShootOnMove/FieldTurretAngleRad", params.turretAngle.getRadians());
+    Logger.recordOutput("ShootOnMove/HoodSetpoint", params.hoodPosition);
   }
 
   @Override

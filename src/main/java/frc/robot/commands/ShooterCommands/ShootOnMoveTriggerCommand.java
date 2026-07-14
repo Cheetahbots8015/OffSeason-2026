@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.feeder.FeederSubsystem;
+import frc.robot.subsystems.hood.HoodSubsystem;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.turret.TurretSubsystem;
@@ -23,6 +24,7 @@ import org.littletonrobotics.junction.Logger;
 public class ShootOnMoveTriggerCommand extends Command {
   private final Drive drive;
   private final TurretSubsystem turret;
+  private final HoodSubsystem hood;
   private final ShooterSubsystem shooter;
   private final IndexerSubsystem indexer;
   private final FeederSubsystem feeder;
@@ -31,18 +33,20 @@ public class ShootOnMoveTriggerCommand extends Command {
   public ShootOnMoveTriggerCommand(
       Drive drive,
       TurretSubsystem turret,
+      HoodSubsystem hood,
       ShooterSubsystem shooter,
       IndexerSubsystem indexer,
       FeederSubsystem feeder,
       ShootOnMoveCalculator calculator) {
     this.drive = drive;
     this.turret = turret;
+    this.hood = hood;
     this.shooter = shooter;
     this.indexer = indexer;
     this.feeder = feeder;
     this.calculator = calculator;
 
-    addRequirements(turret, shooter);
+    addRequirements(turret, hood, shooter, indexer, feeder);
   }
 
   @Override
@@ -63,6 +67,7 @@ public class ShootOnMoveTriggerCommand extends Command {
     double turretOffset = 60;
     shooter.VelocityVoltage(shooterSetpointRadPerSec);
     turret.setPosition(wrapTo180(turretSetpointDeg + turretOffset));
+    // hood.setPosition(Math.max(0.0, Math.min(params.hoodPosition, 60.0)));
     if (CheetahUtil.isNear(turret.getPosition(), wrapTo180(turretSetpointDeg + turretOffset), 10)) {
       indexer.VelocityVoltage(
           SmartDashboard.getNumber("indexerHorizontalVelocity", 0),
@@ -77,6 +82,7 @@ public class ShootOnMoveTriggerCommand extends Command {
     Logger.recordOutput("ShootOnMove/FinalDegree", wrapTo180(turretSetpointDeg + turretOffset));
     Logger.recordOutput("ShootOnMove/ShooterSetpointRadPerSec", shooterSetpointRadPerSec);
     Logger.recordOutput("ShootOnMove/FieldTurretAngleRad", params.turretAngle.getRadians());
+    Logger.recordOutput("ShootOnMove/HoodSetpoint", params.hoodPosition);
   }
 
   @Override

@@ -1,5 +1,6 @@
 package frc.robot.util;
 
+import frc.robot.constants.HoodConstants;
 import frc.robot.constants.TurretConstants;
 import java.util.function.DoubleSupplier;
 
@@ -42,26 +43,19 @@ public class CheetahUtil {
     return applyDeadband(value, deadband);
   }
 
-  // --- Elevator Unit Conversions ---
-
-  /**
-   * Converts elevator motor rotations to height in meters. Formula: rotations / gear_ratio *
-   * (distance_per_rotation) + offset
-   */
-  public static double elevatorRotationToMeters(double rotations) {
-    return rotations / 6.0 * (0.005 * 30) + 0.362;
-  }
-
-  /** Converts height in meters to elevator motor rotations. */
-  public static double elevatorMetersToRotation(double meters) {
-    return (meters - 0.362) * 6.0 / (0.005 * 30);
-  }
-
   public static double turretRotationsToDeg(double rotations) {
     return rotations * TurretConstants.gearRatio * 360.0;
   }
 
   public static double turretDegToRotations(double degrees) {
     return degrees / TurretConstants.gearRatio / 360.0;
+  }
+
+  public static double hoodRotationsToDeg(double rotations) {
+    return rotations * HoodConstants.gearRatio * 360.0;
+  }
+
+  public static double hoodDegToRotations(double degrees) {
+    return degrees / HoodConstants.gearRatio / 360.0;
   }
 }

@@ -30,10 +30,14 @@ public class ShootOnMoveCalculator {
   // Distance (meters) -> flywheel speed (rotations per second)
   private final InterpolatingDoubleTreeMap distanceToFlywheelSpeed =
       new InterpolatingDoubleTreeMap();
+  private final InterpolatingDoubleTreeMap farDistanceToFlywheelSpeed =
+      new InterpolatingDoubleTreeMap();
 
   // Linear model: projectileSpeedMps = m * flywheelRps + b
   private double projectileSpeedSlope;
   private double projectileSpeedIntercept;
+  private double farProjectileSpeedSlope;
+  private double farProjectileSpeedIntercept;
 
   private final Translation2d redTarget;
   private final Translation2d blueTarget;
@@ -51,6 +55,7 @@ public class ShootOnMoveCalculator {
    */
   private void populateTables() {
     List<double[]> calibrationData = loadCalibrationDataFromFile();
+    List<double[]> farCalibrationData = loadFarCalibrationDataFromFile();
 
     // If no calibration data was loaded from file, fall back to the regression estimate.
     if (calibrationData.isEmpty()) {
@@ -65,6 +70,18 @@ public class ShootOnMoveCalculator {
         calibrationData.add(new double[] {distanceMeters, flywheelRps, projectileSpeedMps});
       }
     }
+    if (farCalibrationData.isEmpty()) {
+      for (double distanceMeters = 1.0; distanceMeters <= 8.0; distanceMeters += 0.5) {
+        double flywheelRps =
+            Math.sqrt(
+                    distanceMeters * ShootOnMoveConstants.kFlywheelCurveSlope
+                        + ShootOnMoveConstants.kFlywheelCurveIntercept)
+                / (2.0 * Math.PI);
+        double projectileSpeedMps =
+            flywheelRps * ShooterConstants.kGear * ShooterConstants.kRadius * 2 * Math.PI;
+        farCalibrationData.add(new double[] {distanceMeters, flywheelRps, projectileSpeedMps});
+      }
+    }
 
     List<Double> flywheelRpsValues = new ArrayList<>();
     List<Double> projectileSpeedValues = new ArrayList<>();
@@ -75,8 +92,19 @@ public class ShootOnMoveCalculator {
     }
     fitProjectileSpeedRegression(flywheelRpsValues, projectileSpeedValues);
 
+    List<Double> farFlywheelRpsValues = new ArrayList<>();
+    List<Double> farProjectileSpeedValues = new ArrayList<>();
+    for (double[] row : farCalibrationData) {
+      farDistanceToFlywheelSpeed.put(row[0], row[1]);
+      farFlywheelRpsValues.add(row[1]);
+      farProjectileSpeedValues.add(row[2]);
+    }
+    farFitProjectileSpeedRegression(farFlywheelRpsValues, farProjectileSpeedValues);
+
     Logger.recordOutput("ShootOnMove/ProjectileSpeedSlope", projectileSpeedSlope);
     Logger.recordOutput("ShootOnMove/ProjectileSpeedIntercept", projectileSpeedIntercept);
+    Logger.recordOutput("ShootOnMove/FarProjectileSpeedSlope", farProjectileSpeedSlope);
+    Logger.recordOutput("ShootOnMove/FarProjectileSpeedIntercept", farProjectileSpeedIntercept);
   }
 
   /**
@@ -120,6 +148,39 @@ public class ShootOnMoveCalculator {
     return data;
   }
 
+  private List<double[]> loadFarCalibrationDataFromFile() {
+    List<double[]> data = new ArrayList<>();
+    File file = new File(Filesystem.getDeployDirectory(), "shoot-on-move-far-data.csv");
+    try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+      String line;
+      boolean firstLine = true;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+        if (line.isEmpty() || line.startsWith("#") || line.startsWith("//")) {
+          continue;
+        }
+        if (firstLine) {
+          firstLine = false;
+          continue;
+        }
+        String[] parts = line.split(",");
+        if (parts.length >= 3) {
+          double distanceMeters = Double.parseDouble(parts[0].trim());
+          double flywheelRps = Double.parseDouble(parts[1].trim());
+          double projectileSpeedMps = Double.parseDouble(parts[2].trim());
+          data.add(new double[] {distanceMeters, flywheelRps, projectileSpeedMps});
+        }
+      }
+      Logger.recordOutput(
+          "ShootOnMove/FarCalibrationDataLoaded", "Loaded " + data.size() + " entries from file");
+    } catch (Exception e) {
+      Logger.recordOutput(
+          "ShootOnMove/FarCalibrationDataLoadError",
+          "Failed to load " + file.getAbsolutePath() + ": " + e.getMessage());
+    }
+    return data;
+  }
+
   /**
    * Fits a linear regression of projectile speed (m/s) vs flywheel speed (RPS).
    *
@@ -158,6 +219,44 @@ public class ShootOnMoveCalculator {
     projectileSpeedIntercept = (sumY - projectileSpeedSlope * sumX) / n;
   }
 
+  /**
+   * Fits a linear regression of projectile speed (m/s) vs flywheel speed (RPS) for far shots.
+   *
+   * <p>Model: projectileSpeed = slope * flywheelRps + intercept
+   */
+  private void farFitProjectileSpeedRegression(
+      List<Double> flywheelRpsValues, List<Double> projectileSpeedValues) {
+    int n = flywheelRpsValues.size();
+    if (n < 2) {
+      farProjectileSpeedSlope = ShooterConstants.kGear * ShooterConstants.kRadius * Math.PI * 2.0;
+      farProjectileSpeedIntercept = 0.0;
+      return;
+    }
+
+    double sumX = 0.0;
+    double sumY = 0.0;
+    double sumXY = 0.0;
+    double sumX2 = 0.0;
+    for (int i = 0; i < n; i++) {
+      double x = flywheelRpsValues.get(i);
+      double y = projectileSpeedValues.get(i);
+      sumX += x;
+      sumY += y;
+      sumXY += x * y;
+      sumX2 += x * x;
+    }
+
+    double denominator = n * sumX2 - sumX * sumX;
+    if (Math.abs(denominator) < 1e-9) {
+      farProjectileSpeedSlope = ShooterConstants.kGear * ShooterConstants.kRadius;
+      farProjectileSpeedIntercept = 0.0;
+      return;
+    }
+
+    farProjectileSpeedSlope = (n * sumXY - sumX * sumY) / denominator;
+    farProjectileSpeedIntercept = (sumY - farProjectileSpeedSlope * sumX) / n;
+  }
+
   /** Returns the current alliance target. */
   public Translation2d getTarget() {
     if (DriverStation.getAlliance().isPresent()
@@ -179,45 +278,84 @@ public class ShootOnMoveCalculator {
     Rotation2d robotHeading = robotPose.getRotation();
     Translation2d target = getTarget();
     Translation2d effectiveTarget = target;
+    double distance = effectiveTarget.getDistance(robotPos);
+    double hoodPosition = 0.0;
 
-    for (int i = 0; i < ShootOnMoveConstants.kConvergenceIterations; i++) {
-      double distance = effectiveTarget.getDistance(robotPos);
-      double lookupDistance =
-          Math.max(0.0, distance - ShootOnMoveConstants.kTargetDistanceOffsetMeters);
-      double flywheelSpeed = distanceToFlywheelSpeed.get(lookupDistance);
-      double projectileSpeed = projectileSpeedSlope * flywheelSpeed + projectileSpeedIntercept;
-      projectileSpeed *= Math.cos(Math.toRadians(65.0));
-      // TODO: hood position
-      double shotTime = lookupDistance / projectileSpeed;
+    if (distance < ShootOnMoveConstants.switchDistanceMeters) {
+      for (int i = 0; i < ShootOnMoveConstants.kConvergenceIterations; i++) {
+        distance = effectiveTarget.getDistance(robotPos);
+        double lookupDistance =
+            Math.max(0.0, distance - ShootOnMoveConstants.kTargetDistanceOffsetMeters);
+        double flywheelSpeed = distanceToFlywheelSpeed.get(lookupDistance);
+        double projectileSpeed = projectileSpeedSlope * flywheelSpeed + projectileSpeedIntercept;
+        projectileSpeed *= Math.cos(Math.toRadians(65.0));
+        // TODO: hood position
+        double shotTime = lookupDistance / projectileSpeed;
 
-      // Velocity of the shooter exit point due to chassis translation.
-      Translation2d turretVelocity =
-          new Translation2d(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond);
+        // Velocity of the shooter exit point due to chassis translation.
+        Translation2d turretVelocity =
+            new Translation2d(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond);
 
-      // Chassis rotation contribution: rotate the robot-frame turret offset into field frame
-      // and compute omega x r.
-      double robotOmega = chassisSpeeds.omegaRadiansPerSecond;
-      Translation2d turretOffsetField =
-          ShootOnMoveConstants.kTurretOffsetMeters.rotateBy(robotHeading);
-      double chassisRotVx = -robotOmega * turretOffsetField.getY();
-      double chassisRotVy = robotOmega * turretOffsetField.getX();
-      turretVelocity = turretVelocity.plus(new Translation2d(chassisRotVx, chassisRotVy));
+        // Chassis rotation contribution: rotate the robot-frame turret offset into field frame
+        // and compute omega x r.
+        double robotOmega = chassisSpeeds.omegaRadiansPerSecond;
+        Translation2d turretOffsetField =
+            ShootOnMoveConstants.kTurretOffsetMeters.rotateBy(robotHeading);
+        double chassisRotVx = -robotOmega * turretOffsetField.getY();
+        double chassisRotVy = robotOmega * turretOffsetField.getX();
+        turretVelocity = turretVelocity.plus(new Translation2d(chassisRotVx, chassisRotVy));
 
-      // Back-calculate the effective target location at the moment the shot was released.
-      effectiveTarget = target.minus(turretVelocity.times(shotTime));
+        // Back-calculate the effective target location at the moment the shot was released.
+        effectiveTarget = target.minus(turretVelocity.times(shotTime));
+      }
+    } else {
+      for (int i = 0; i < ShootOnMoveConstants.kConvergenceIterations; i++) {
+        distance = effectiveTarget.getDistance(robotPos);
+        double lookupDistance =
+            Math.max(0.0, distance - ShootOnMoveConstants.kTargetDistanceOffsetMeters);
+        double flywheelSpeed = farDistanceToFlywheelSpeed.get(lookupDistance);
+        double projectileSpeed =
+            farProjectileSpeedSlope * flywheelSpeed + farProjectileSpeedIntercept;
+        projectileSpeed *= Math.cos(Math.toRadians(65.0) - ShootOnMoveConstants.hoodPositionOffset);
+        // TODO: hood position
+        double shotTime = lookupDistance / projectileSpeed;
+
+        // Velocity of the shooter exit point due to chassis translation.
+        Translation2d turretVelocity =
+            new Translation2d(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond);
+
+        // Chassis rotation contribution: rotate the robot-frame turret offset into field frame
+        // and compute omega x r.
+        double robotOmega = chassisSpeeds.omegaRadiansPerSecond;
+        Translation2d turretOffsetField =
+            ShootOnMoveConstants.kTurretOffsetMeters.rotateBy(robotHeading);
+        double chassisRotVx = -robotOmega * turretOffsetField.getY();
+        double chassisRotVy = robotOmega * turretOffsetField.getX();
+        turretVelocity = turretVelocity.plus(new Translation2d(chassisRotVx, chassisRotVy));
+
+        // Back-calculate the effective target location at the moment the shot was released.
+        effectiveTarget = target.minus(turretVelocity.times(shotTime));
+
+        hoodPosition = ShootOnMoveConstants.hoodPositionOffset; // Set hood position for far shots
+      }
     }
 
     double finalDistance = effectiveTarget.getDistance(robotPos);
     double finalLookupDistance =
         Math.max(0.0, finalDistance - ShootOnMoveConstants.kTargetDistanceOffsetMeters);
-    double flywheelSpeed = distanceToFlywheelSpeed.get(finalLookupDistance);
+    double flywheelSpeed;
+    if (distance < ShootOnMoveConstants.switchDistanceMeters) {
+      flywheelSpeed = distanceToFlywheelSpeed.get(finalLookupDistance);
+    } else {
+      flywheelSpeed = farDistanceToFlywheelSpeed.get(finalLookupDistance);
+    }
 
     // Aim from the turret's actual field position, not the robot center.
     Translation2d turretFieldPos =
         robotPos.plus(ShootOnMoveConstants.kTurretOffsetMeters.rotateBy(robotHeading));
     Rotation2d turretAngle = effectiveTarget.minus(turretFieldPos).getAngle();
 
-    return new ShotParameters(effectiveTarget, turretAngle, flywheelSpeed);
+    return new ShotParameters(effectiveTarget, turretAngle, flywheelSpeed, hoodPosition);
   }
 
   /** Holds the result of a shoot-on-the-move calculation. */
@@ -225,12 +363,17 @@ public class ShootOnMoveCalculator {
     public final Translation2d effectiveTarget;
     public final Rotation2d turretAngle;
     public final double flywheelSpeedRps;
+    public final double hoodPosition;
 
     public ShotParameters(
-        Translation2d effectiveTarget, Rotation2d turretAngle, double flywheelSpeedRps) {
+        Translation2d effectiveTarget,
+        Rotation2d turretAngle,
+        double flywheelSpeedRps,
+        double hoodPosition) {
       this.effectiveTarget = effectiveTarget;
       this.turretAngle = turretAngle;
       this.flywheelSpeedRps = flywheelSpeedRps;
+      this.hoodPosition = hoodPosition;
     }
   }
 }

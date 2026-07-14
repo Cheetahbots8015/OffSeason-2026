@@ -1,4 +1,4 @@
-package frc.robot.subsystems.turret;
+package frc.robot.subsystems.hood;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -13,10 +13,10 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.constants.TurretConstants;
+import frc.robot.constants.HoodConstants;
 import frc.robot.util.CheetahUtil;
 
-public class TurretIOTalonFX implements TurretIO {
+public class HoodIOTalonFX implements HoodIO {
   private final TalonFX motor;
   private TalonFXConfiguration motorConfigs = new TalonFXConfiguration();
 
@@ -27,31 +27,29 @@ public class TurretIOTalonFX implements TurretIO {
   private final StatusSignal<Voltage> motorAppliedVolts;
   private final StatusSignal<Current> motorCurrent;
 
-  public TurretIOTalonFX() {
-    motor = new TalonFX(TurretConstants.kTurretMotorID, "");
+  public HoodIOTalonFX() {
+    motor = new TalonFX(HoodConstants.kHoodMotorID, "");
 
     motorConfigs.MotorOutput.withNeutralMode(
-        TurretConstants.kMotorNeutralCoast ? NeutralModeValue.Coast : NeutralModeValue.Brake);
+        HoodConstants.kMotorNeutralCoast ? NeutralModeValue.Coast : NeutralModeValue.Brake);
     motorConfigs.MotorOutput.withInverted(
-        TurretConstants.kMotorInvertCCWPositive
+        HoodConstants.kMotorInvertCCWPositive
             ? InvertedValue.CounterClockwise_Positive
             : InvertedValue.Clockwise_Positive);
 
-    motorConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
-        CheetahUtil.turretDegToRotations(-180);
+    motorConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
     motorConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-    motorConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
-        CheetahUtil.turretDegToRotations(180);
+    motorConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = CheetahUtil.hoodDegToRotations(60);
     motorConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
 
-    motorConfigs.CurrentLimits.SupplyCurrentLimit = 30;
-    motorConfigs.CurrentLimits.SupplyCurrentLimitEnable = true;
+    motorConfigs.CurrentLimits.StatorCurrentLimit = 40;
+    motorConfigs.CurrentLimits.StatorCurrentLimitEnable = true;
 
-    motorConfigs.Slot0.kP = TurretConstants.kSlot_kP;
-    motorConfigs.Slot0.kI = TurretConstants.kSlot_kI;
-    motorConfigs.Slot0.kD = TurretConstants.kSlot_kD;
-    motorConfigs.Slot0.kS = TurretConstants.kSlot_kS;
-    motorConfigs.Slot0.kV = TurretConstants.kSlot_kV;
+    motorConfigs.Slot0.kP = HoodConstants.kSlot_kP;
+    motorConfigs.Slot0.kI = HoodConstants.kSlot_kI;
+    motorConfigs.Slot0.kD = HoodConstants.kSlot_kD;
+    motorConfigs.Slot0.kS = HoodConstants.kSlot_kS;
+    motorConfigs.Slot0.kV = HoodConstants.kSlot_kV;
 
     motorConfigs.Voltage.PeakForwardVoltage = 3.0;
     motorConfigs.Voltage.PeakReverseVoltage = -3.0;
@@ -66,7 +64,7 @@ public class TurretIOTalonFX implements TurretIO {
     motorCurrent = motor.getTorqueCurrent();
 
     BaseStatusSignal.setUpdateFrequencyForAll(
-        TurretConstants.kStatusUpdateFrequency,
+        HoodConstants.kStatusUpdateFrequency,
         motorPosition,
         motorVelocity,
         motorAppliedVolts,
@@ -76,7 +74,7 @@ public class TurretIOTalonFX implements TurretIO {
   }
 
   @Override
-  public void updateInputs(TurretIOInputs inputs) {
+  public void updateInputs(HoodIOInputs inputs) {
     BaseStatusSignal.refreshAll(motorPosition, motorVelocity, motorAppliedVolts, motorCurrent);
 
     inputs.motorPositionDeg = Units.rotationsToDegrees(motorPosition.getValueAsDouble());
@@ -84,7 +82,7 @@ public class TurretIOTalonFX implements TurretIO {
     inputs.motorAppliedVolts = motorAppliedVolts.getValueAsDouble();
     inputs.motorCurrentAmps = motorCurrent.getValueAsDouble();
 
-    inputs.turretPositionDeg = CheetahUtil.turretRotationsToDeg(motorPosition.getValueAsDouble());
+    inputs.hoodPositionDeg = CheetahUtil.hoodRotationsToDeg(motorPosition.getValueAsDouble());
   }
 
   @Override
@@ -95,6 +93,6 @@ public class TurretIOTalonFX implements TurretIO {
   @Override
   public void setPosition(double positionDeg) {
     // Talon expects rotations for position commands
-    motor.setControl(m_request.withPosition(CheetahUtil.turretDegToRotations(positionDeg)));
+    motor.setControl(m_request.withPosition(CheetahUtil.hoodDegToRotations(positionDeg)));
   }
 }

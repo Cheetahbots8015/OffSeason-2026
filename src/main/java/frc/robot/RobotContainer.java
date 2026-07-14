@@ -48,6 +48,9 @@ import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.feeder.FeederIOSim;
 import frc.robot.subsystems.feeder.FeederIOTalonFX;
 import frc.robot.subsystems.feeder.FeederSubsystem;
+import frc.robot.subsystems.hood.HoodIOSim;
+import frc.robot.subsystems.hood.HoodIOTalonFX;
+import frc.robot.subsystems.hood.HoodSubsystem;
 import frc.robot.subsystems.indexer.IndexerIOSim;
 import frc.robot.subsystems.indexer.IndexerOTalonFX;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
@@ -77,6 +80,7 @@ public class RobotContainer {
   private final ShooterSubsystem shooter;
   private final IndexerSubsystem indexer;
   private final TurretSubsystem turret;
+  private final HoodSubsystem hood;
   private final ShootOnMoveCalculator shootOnMoveCalculator;
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
@@ -97,6 +101,7 @@ public class RobotContainer {
         shooter = new ShooterSubsystem(new ShooterIOTalonFX());
         indexer = new IndexerSubsystem(new IndexerOTalonFX());
         turret = new TurretSubsystem(new TurretIOTalonFX());
+        hood = new HoodSubsystem(new HoodIOTalonFX());
         break;
 
       case SIM:
@@ -113,6 +118,7 @@ public class RobotContainer {
         shooter = new ShooterSubsystem(new ShooterIOSim());
         indexer = new IndexerSubsystem(new IndexerIOSim());
         turret = new TurretSubsystem(new TurretIOSim());
+        hood = new HoodSubsystem(new HoodIOSim());
         break;
 
       default:
@@ -129,6 +135,7 @@ public class RobotContainer {
         shooter = new ShooterSubsystem(new ShooterIOSim());
         indexer = new IndexerSubsystem(new IndexerIOSim());
         turret = new TurretSubsystem(new TurretIOSim());
+        hood = new HoodSubsystem(new HoodIOSim());
         break;
     }
 
@@ -203,12 +210,13 @@ public class RobotContainer {
 
     controller.povDown().whileTrue(new TurretPositionVoltage(turret, 0));
     controller.leftTrigger().whileTrue(new IntakeCommand(intake));
-    turret.setDefaultCommand(new ShootOnMoveDefaultCommand(drive, turret, shootOnMoveCalculator));
+    turret.setDefaultCommand(
+        new ShootOnMoveDefaultCommand(drive, turret, hood, shootOnMoveCalculator));
     controller
         .rightTrigger()
         .whileTrue(
             new ShootOnMoveTriggerCommand(
-                drive, turret, shooter, indexer, feeder, shootOnMoveCalculator));
+                drive, turret, hood, shooter, indexer, feeder, shootOnMoveCalculator));
     controller
         .rightTrigger()
         .whileTrue(

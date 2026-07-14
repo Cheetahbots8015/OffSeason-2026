@@ -1,0 +1,10 @@
+# Shoot-on-the-move-far calibration data
+distanceMeters,flywheelRps,projectileSpeedMps
+2.5,44.6,4.60
+2.6,46.2,4.79
+2.775,47.77,4.90
+2.916,49.36,4.99
+3.018,50.96,5.22
+3.182,51.75,5.31
+3.490,53.34,5.52
+3.773,55.73,5.77

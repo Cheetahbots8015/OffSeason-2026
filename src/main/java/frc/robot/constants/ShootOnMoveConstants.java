@@ -28,5 +28,13 @@ public final class ShootOnMoveConstants {
   public static final double kFlywheelCurveIntercept = 56439.0;
 
   /** Distance (meters) subtracted from the target distance in the existing ShootCommand. */
+  // TODO: Should be deleted using limelight
   public static final double kTargetDistanceOffsetMeters = 0.6036;
+
+  /** Distance (meters) at which to switch to the far shot regression. */
+  public static final double switchDistanceMeters = 5.0;
+
+  /** Offset (meters) to apply to the hood position on far shot when shooting on the move. */
+  // TODO: Replcae the placeholder
+  public static final double hoodPositionOffset = 0.0;
 }
