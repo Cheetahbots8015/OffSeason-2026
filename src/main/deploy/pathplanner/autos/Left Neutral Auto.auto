@@ -5,31 +5,38 @@
     "data": {
       "commands": [
         {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "Left Start To Neutral"
           }
         },
         {
-          "type": "deadline",
+          "type": "parallel",
           "data": {
             "commands": [
               {
                 "type": "named",
                 "data": {
-                  "name": "LongIntake"
+                  "name": "Intake4"
                 }
               },
               {
-                "type": "path",
+                "type": "sequential",
                 "data": {
-                  "pathName": "Left Neutral Intake"
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Left Neutral Intake"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Left Neutral Back"
+                      }
+                    }
+                  ]
                 }
               }
             ]
@@ -38,23 +45,23 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left Neutral Back"
+            "pathName": "Start To Depot"
           }
         },
         {
-          "type": "deadline",
+          "type": "parallel",
           "data": {
             "commands": [
               {
                 "type": "named",
                 "data": {
-                  "name": "LongShoot"
+                  "name": "Intake4"
                 }
               },
               {
-                "type": "named",
+                "type": "path",
                 "data": {
-                  "name": "ArmSHM"
+                  "pathName": "Depot Intake"
                 }
               }
             ]

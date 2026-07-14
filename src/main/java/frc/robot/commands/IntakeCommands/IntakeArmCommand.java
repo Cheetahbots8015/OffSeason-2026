@@ -2,6 +2,7 @@ package frc.robot.commands.IntakeCommands;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.intake.IntakeSubsystem;
+import frc.robot.util.CheetahUtil;
 
 public class IntakeArmCommand extends Command {
 
@@ -27,6 +28,6 @@ public class IntakeArmCommand extends Command {
 
   @Override
   public boolean isFinished() {
-    return false;
+    return CheetahUtil.isNear(m_subsystem.getInput().ArmPositionRad, m_radians, 5);
   }
 }

@@ -8,62 +8,53 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.805771542778295,
-        "y": 4.858020874130597
+        "x": 6.887535612535612,
+        "y": 5.921353276353277
       },
       "isLocked": false,
       "linkedName": "Left Neutral Intake"
     },
     {
       "anchor": {
-        "x": 7.27009548611111,
+        "x": 6.383646723646723,
         "y": 7.306
       },
       "prevControl": {
-        "x": 7.663758680555555,
-        "y": 7.27326388888889
+        "x": 7.133019943019943,
+        "y": 7.277977207977208
       },
       "nextControl": {
-        "x": 6.81343382009208,
-        "y": 7.34397491675614
+        "x": 6.030913254412871,
+        "y": 7.319190458895883
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 4.0,
+        "x": 4.302,
         "y": 7.306
       },
       "prevControl": {
-        "x": 4.330675243836292,
-        "y": 7.262650424721928
+        "x": 4.697021978668129,
+        "y": 7.306
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": null
     }
   ],
-  "rotationTargets": [],
-  "constraintZones": [
+  "rotationTargets": [
     {
-      "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.9094622191967288,
-      "maxWaypointRelativePos": 1.0918992511912797,
-      "constraints": {
-        "maxVelocity": 0.6,
-        "maxAcceleration": 3.0,
-        "maxAngularVelocity": 540.0,
-        "maxAngularAcceleration": 720.0,
-        "nominalVoltage": 12.0,
-        "unlimited": false
-      }
+      "waypointRelativePos": 1.0063965884861255,
+      "rotationDegrees": 180.0
     }
   ],
+  "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.0,
+    "maxVelocity": 3.0,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -71,8 +62,8 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": -90.0
+    "velocity": 1.5,
+    "rotation": 180.0
   },
   "reversed": false,
   "folder": null,

@@ -316,7 +316,7 @@ public class Drive extends SubsystemBase {
         doRejectUpdate = shouldReject(mt2_swerve, validateID);
       }
       if (!doRejectUpdate) {
-        poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(5, 5, 9999999));
+        poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(3, 3, 9999999));
         poseEstimator.addVisionMeasurement(mt2_swerve.pose, mt2_swerve.timestampSeconds);
       }
       Logger.recordOutput("LL/Swerve/pose", mt2_swerve.pose);
