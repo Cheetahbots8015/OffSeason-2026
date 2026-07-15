@@ -49,12 +49,19 @@ public class ShootOnMoveDefaultCommand extends Command {
 
     double turretOffset = 60;
 
-    turret.setPosition(wrapTo180(turretSetpointDeg + turretOffset));
-    // hood.setPosition(Math.max(0.0, Math.min(params.hoodPosition, 60.0)));
+    double turretSetpoint = wrapTo180(turretSetpointDeg + turretOffset);
+    if (turretSetpoint > 170) {
+      turret.setPosition(170);
+    } else if (turretSetpoint < -170) {
+      turret.setPosition(-170);
+    } else {
+      turret.setPosition(turretSetpoint);
+    }
+    hood.setPosition(Math.max(0.0, Math.min(params.hoodPosition, 20.0)));
 
     Logger.recordOutput("ShootOnMove/EffectiveTarget", params.effectiveTarget);
     Logger.recordOutput("ShootOnMove/TurretSetpointDeg", turretSetpointDeg);
-    Logger.recordOutput("ShootOnMove/FinalDegree", wrapTo180(turretSetpointDeg + turretOffset));
+    Logger.recordOutput("ShootOnMove/FinalDegree", turretSetpoint);
     Logger.recordOutput("ShootOnMove/ShooterSetpointRadPerSec", shooterSetpointRadPerSec);
     Logger.recordOutput("ShootOnMove/FieldTurretAngleRad", params.turretAngle.getRadians());
     Logger.recordOutput("ShootOnMove/HoodSetpoint", params.hoodPosition);

@@ -17,7 +17,7 @@ public final class ShootOnMoveConstants {
   public static final Translation2d kTurretOffsetMeters = new Translation2d(0.122, -0.122);
 
   /** Number of iterations for the effective-target convergence solver. */
-  public static final int kConvergenceIterations = 5;
+  public static final int kConvergenceIterations = 3;
 
   /**
    * Flywheel curve: PredictedVelocity = sqrt(distance * kFlywheelCurveSlope +
@@ -29,12 +29,15 @@ public final class ShootOnMoveConstants {
 
   /** Distance (meters) subtracted from the target distance in the existing ShootCommand. */
   // TODO: Should be deleted using limelight
-  public static final double kTargetDistanceOffsetMeters = 0.6036;
+  public static final double kTargetDistanceOffsetMeters = 0;
 
   /** Distance (meters) at which to switch to the far shot regression. */
   public static final double switchDistanceMeters = 5.0;
 
-  /** Offset (meters) to apply to the hood position on far shot when shooting on the move. */
+  /** Offset (degrees) to apply to the hood position on far shot when shooting on the move. */
   // TODO: Replcae the placeholder
-  public static final double hoodPositionOffset = 0.0;
+  public static final double hoodPositionOffset = 20.0;
+
+  /** Default hood position (degrees) for the shooter. */
+  public static final double hoodDefaultPosition = 71;
 }

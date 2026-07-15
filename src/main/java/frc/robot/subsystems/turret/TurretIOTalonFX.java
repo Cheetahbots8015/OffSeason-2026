@@ -38,10 +38,10 @@ public class TurretIOTalonFX implements TurretIO {
             : InvertedValue.Clockwise_Positive);
 
     motorConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
-        CheetahUtil.turretDegToRotations(-180);
+        CheetahUtil.turretDegToRotations(-175);
     motorConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
     motorConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
-        CheetahUtil.turretDegToRotations(180);
+        CheetahUtil.turretDegToRotations(175);
     motorConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
 
     motorConfigs.CurrentLimits.SupplyCurrentLimit = 30;

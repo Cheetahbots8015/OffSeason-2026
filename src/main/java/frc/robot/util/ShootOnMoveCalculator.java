@@ -288,9 +288,11 @@ public class ShootOnMoveCalculator {
             Math.max(0.0, distance - ShootOnMoveConstants.kTargetDistanceOffsetMeters);
         double flywheelSpeed = distanceToFlywheelSpeed.get(lookupDistance);
         double projectileSpeed = projectileSpeedSlope * flywheelSpeed + projectileSpeedIntercept;
-        projectileSpeed *= Math.cos(Math.toRadians(65.0));
+        projectileSpeed *= Math.cos(Math.toRadians(ShootOnMoveConstants.hoodDefaultPosition));
         // TODO: hood position
-        double shotTime = lookupDistance / projectileSpeed;
+        double shotTime = distance / projectileSpeed;
+        Logger.recordOutput("ShootOnMove/distance", distance);
+        Logger.recordOutput("ShootOnMove/shotTime", shotTime);
 
         // Velocity of the shooter exit point due to chassis translation.
         Translation2d turretVelocity =
@@ -316,9 +318,15 @@ public class ShootOnMoveCalculator {
         double flywheelSpeed = farDistanceToFlywheelSpeed.get(lookupDistance);
         double projectileSpeed =
             farProjectileSpeedSlope * flywheelSpeed + farProjectileSpeedIntercept;
-        projectileSpeed *= Math.cos(Math.toRadians(65.0) - ShootOnMoveConstants.hoodPositionOffset);
+        projectileSpeed *=
+            Math.cos(
+                Math.toRadians(ShootOnMoveConstants.hoodDefaultPosition)
+                    - Math.toRadians(ShootOnMoveConstants.hoodPositionOffset));
         // TODO: hood position
-        double shotTime = lookupDistance / projectileSpeed;
+        double shotTime = distance / projectileSpeed;
+
+        Logger.recordOutput("ShootOnMove/distance", distance);
+        Logger.recordOutput("ShootOnMove/shotTime", shotTime);
 
         // Velocity of the shooter exit point due to chassis translation.
         Translation2d turretVelocity =

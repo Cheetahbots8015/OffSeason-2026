@@ -45,8 +45,7 @@ public class ShootOnMoveTriggerCommand extends Command {
     this.indexer = indexer;
     this.feeder = feeder;
     this.calculator = calculator;
-
-    addRequirements(turret, hood, shooter, indexer, feeder);
+    addRequirements(turret, shooter, indexer, feeder, hood);
   }
 
   @Override
@@ -66,9 +65,18 @@ public class ShootOnMoveTriggerCommand extends Command {
 
     double turretOffset = 60;
     shooter.VelocityVoltage(shooterSetpointRadPerSec);
-    turret.setPosition(wrapTo180(turretSetpointDeg + turretOffset));
-    // hood.setPosition(Math.max(0.0, Math.min(params.hoodPosition, 60.0)));
-    if (CheetahUtil.isNear(turret.getPosition(), wrapTo180(turretSetpointDeg + turretOffset), 10)) {
+
+    double turretSetpoint = wrapTo180(turretSetpointDeg + turretOffset);
+    if (turretSetpoint > 170) {
+      turret.setPosition(170);
+    } else if (turretSetpoint < -170) {
+      turret.setPosition(-170);
+    } else {
+      turret.setPosition(turretSetpoint);
+    }
+    hood.setPosition(Math.max(0.0, Math.min(params.hoodPosition, 20.0)));
+    if (CheetahUtil.isNear(turret.getPosition(), turretSetpoint, 10)
+        && CheetahUtil.isNear(shooterSetpointRadPerSec, shooter.getMotorVelocity(), 20)) {
       indexer.VelocityVoltage(
           SmartDashboard.getNumber("indexerHorizontalVelocity", 0),
           SmartDashboard.getNumber("indexerVerticleVelocity", 0));
@@ -79,7 +87,7 @@ public class ShootOnMoveTriggerCommand extends Command {
     }
     Logger.recordOutput("ShootOnMove/EffectiveTarget", params.effectiveTarget);
     Logger.recordOutput("ShootOnMove/TurretSetpointDeg", turretSetpointDeg);
-    Logger.recordOutput("ShootOnMove/FinalDegree", wrapTo180(turretSetpointDeg + turretOffset));
+    Logger.recordOutput("ShootOnMove/FinalDegree", turretSetpoint);
     Logger.recordOutput("ShootOnMove/ShooterSetpointRadPerSec", shooterSetpointRadPerSec);
     Logger.recordOutput("ShootOnMove/FieldTurretAngleRad", params.turretAngle.getRadians());
     Logger.recordOutput("ShootOnMove/HoodSetpoint", params.hoodPosition);

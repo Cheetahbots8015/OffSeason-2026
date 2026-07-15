@@ -8,7 +8,6 @@ import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
@@ -28,7 +27,7 @@ public class HoodIOTalonFX implements HoodIO {
   private final StatusSignal<Current> motorCurrent;
 
   public HoodIOTalonFX() {
-    motor = new TalonFX(HoodConstants.kHoodMotorID, "");
+    motor = new TalonFX(HoodConstants.kHoodMotorID, "canivore");
 
     motorConfigs.MotorOutput.withNeutralMode(
         HoodConstants.kMotorNeutralCoast ? NeutralModeValue.Coast : NeutralModeValue.Brake);
@@ -39,11 +38,11 @@ public class HoodIOTalonFX implements HoodIO {
 
     motorConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
     motorConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-    motorConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = CheetahUtil.hoodDegToRotations(60);
+    motorConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = CheetahUtil.hoodDegToRotations(20);
     motorConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
 
-    motorConfigs.CurrentLimits.StatorCurrentLimit = 40;
-    motorConfigs.CurrentLimits.StatorCurrentLimitEnable = true;
+    motorConfigs.CurrentLimits.SupplyCurrentLimit = 20;
+    motorConfigs.CurrentLimits.SupplyCurrentLimitEnable = true;
 
     motorConfigs.Slot0.kP = HoodConstants.kSlot_kP;
     motorConfigs.Slot0.kI = HoodConstants.kSlot_kI;
@@ -51,13 +50,13 @@ public class HoodIOTalonFX implements HoodIO {
     motorConfigs.Slot0.kS = HoodConstants.kSlot_kS;
     motorConfigs.Slot0.kV = HoodConstants.kSlot_kV;
 
-    motorConfigs.Voltage.PeakForwardVoltage = 3.0;
-    motorConfigs.Voltage.PeakReverseVoltage = -3.0;
-
     motorConfigs.MotionMagic.MotionMagicCruiseVelocity = 10;
     motorConfigs.MotionMagic.MotionMagicAcceleration = 40;
 
     motor.getConfigurator().apply(motorConfigs);
+
+    motor.setPosition(0);
+
     motorPosition = motor.getPosition();
     motorVelocity = motor.getVelocity();
     motorAppliedVolts = motor.getMotorVoltage();
@@ -77,7 +76,7 @@ public class HoodIOTalonFX implements HoodIO {
   public void updateInputs(HoodIOInputs inputs) {
     BaseStatusSignal.refreshAll(motorPosition, motorVelocity, motorAppliedVolts, motorCurrent);
 
-    inputs.motorPositionDeg = Units.rotationsToDegrees(motorPosition.getValueAsDouble());
+    inputs.motorPosition = motorPosition.getValueAsDouble();
     inputs.motorVelocityRotPerSec = motorVelocity.getValueAsDouble();
     inputs.motorAppliedVolts = motorAppliedVolts.getValueAsDouble();
     inputs.motorCurrentAmps = motorCurrent.getValueAsDouble();

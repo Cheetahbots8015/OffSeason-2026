@@ -20,7 +20,7 @@ public class HoodIOSim implements HoodIO {
     motorSim.setInputVoltage(MathUtil.clamp(appliedVolts, -12.0, 12.0));
     motorSim.update(0.02);
 
-    inputs.motorPositionDeg = Math.toDegrees(motorSim.getAngularPositionRad());
+    inputs.motorPosition = Math.toDegrees(motorSim.getAngularPositionRad());
     inputs.motorVelocityRotPerSec = motorSim.getAngularVelocityRadPerSec();
     inputs.motorAppliedVolts = motorSim.getInputVoltage();
     inputs.motorCurrentAmps = Math.abs(motorSim.getCurrentDrawAmps());

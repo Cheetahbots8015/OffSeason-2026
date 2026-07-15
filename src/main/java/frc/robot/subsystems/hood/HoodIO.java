@@ -6,7 +6,7 @@ public interface HoodIO {
   @AutoLog
   public static class HoodIOInputs {
     // Motor
-    public double motorPositionDeg = 0.0;
+    public double motorPosition = 0.0;
     public double motorVelocityRotPerSec = 0.0;
     public double motorAppliedVolts = 0.0;
     public double motorCurrentAmps = 0.0;

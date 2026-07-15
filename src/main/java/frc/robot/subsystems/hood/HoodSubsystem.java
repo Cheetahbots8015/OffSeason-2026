@@ -48,7 +48,7 @@ public class HoodSubsystem extends SubsystemBase {
   }
 
   public double getMotorPosition() {
-    return inputs.motorPositionDeg;
+    return inputs.motorPosition;
   }
 
   public double getPosition() {

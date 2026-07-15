@@ -237,6 +237,28 @@ public class Drive extends SubsystemBase {
     }
   }
 
+  private double calculateStdDevs(PoseEstimate mt2, int[] validateID) {
+    double StdDev = 0.0;
+    for (var i : mt2.rawFiducials) {
+      boolean allowed = false;
+      for (int j : validateID) {
+        if (i.id == j) {
+          allowed = true;
+        }
+      }
+      if (allowed) {
+        StdDev += i.distToCamera * i.ambiguity;
+      }
+    }
+    StdDev /= mt2.tagCount;
+    if (StdDev < 0.5) {
+      StdDev = 0.5;
+    } else if (StdDev > 5) {
+      StdDev = 999999;
+    }
+    return StdDev;
+  }
+
   @Override
   public void periodic() {
     SmartDashboard.putData("Drive", this);
@@ -316,8 +338,11 @@ public class Drive extends SubsystemBase {
         doRejectUpdate = shouldReject(mt2_swerve, validateID);
       }
       if (!doRejectUpdate) {
-        poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(3, 3, 9999999));
-        poseEstimator.addVisionMeasurement(mt2_swerve.pose, mt2_swerve.timestampSeconds);
+        double StdDev = calculateStdDevs(mt2_swerve, validateID);
+        if (StdDev != 9999999) {
+          poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(StdDev, StdDev, 9999999));
+          poseEstimator.addVisionMeasurement(mt2_swerve.pose, mt2_swerve.timestampSeconds);
+        }
       }
       Logger.recordOutput("LL/Swerve/pose", mt2_swerve.pose);
       Logger.recordOutput("LL/Swerve/timestamp", mt2_swerve.timestampSeconds);
@@ -346,8 +371,11 @@ public class Drive extends SubsystemBase {
         doRejectUpdate = shouldReject(mt2_left, validateID);
       }
       if (!doRejectUpdate) {
-        poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(3, 3, 9999999));
-        poseEstimator.addVisionMeasurement(mt2_left.pose, mt2_left.timestampSeconds);
+        double StdDev = calculateStdDevs(mt2_left, validateID);
+        if (StdDev != 9999999) {
+          poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(StdDev, StdDev, 9999999));
+          poseEstimator.addVisionMeasurement(mt2_left.pose, mt2_left.timestampSeconds);
+        }
         Logger.recordOutput("LL/Left/pose", mt2_left.pose);
         Logger.recordOutput("LL/Left/timestamp", mt2_left.timestampSeconds);
         Logger.recordOutput("LL/Left/avgdist", mt2_left.avgTagDist);
@@ -375,8 +403,11 @@ public class Drive extends SubsystemBase {
         doRejectUpdate = shouldReject(mt2_rear, validateID);
       }
       if (!doRejectUpdate) {
-        poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(3, 3, 9999999));
-        poseEstimator.addVisionMeasurement(mt2_rear.pose, mt2_rear.timestampSeconds);
+        double StdDev = calculateStdDevs(mt2_rear, validateID);
+        if (StdDev != 9999999) {
+          poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(StdDev, StdDev, 9999999));
+          poseEstimator.addVisionMeasurement(mt2_rear.pose, mt2_rear.timestampSeconds);
+        }
       }
       Logger.recordOutput("LL/Rear/pose", mt2_rear.pose);
       Logger.recordOutput("LL/Rear/timestamp", mt2_rear.timestampSeconds);

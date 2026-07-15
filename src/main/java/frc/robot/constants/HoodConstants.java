@@ -8,16 +8,15 @@ public final class HoodConstants {
 
   // Motor configuration
   public static final boolean kMotorNeutralCoast = false;
-  public static final boolean kMotorInvertCCWPositive = false;
+  public static final boolean kMotorInvertCCWPositive = true;
 
   // Control tuning
   public static final double kStatusUpdateFrequency = 50.0;
-  public static final double kSlot_kP = 0;
+  public static final double kSlot_kP = 5;
   public static final double kSlot_kI = 0;
   public static final double kSlot_kD = 0;
-  public static final double kSlot_kS = 0;
-  public static final double kSlot_kV = 0;
+  public static final double kSlot_kS = 0.35;
+  public static final double kSlot_kV = 0.2;
 
-  // TODO: Replace the placeholder
-  public static final double gearRatio = 1;
+  public static final double gearRatio = 1 / 40.625;
 }

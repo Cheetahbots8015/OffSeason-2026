@@ -65,9 +65,18 @@ public class IntakeIOTalonFX implements IntakeIO {
             ? InvertedValue.CounterClockwise_Positive
             : InvertedValue.Clockwise_Positive);
 
+    flywheelConfigs.CurrentLimits.SupplyCurrentLowerLimit = 10;
+    flywheelConfigs.CurrentLimits.SupplyCurrentLimitEnable = true;
+    followerConfigs.CurrentLimits.SupplyCurrentLowerLimit = 10;
+    followerConfigs.CurrentLimits.SupplyCurrentLimitEnable = true;
+
     arm = new TalonFX(IntakeConstants.armID, "");
     armConfigs.MotorOutput.withNeutralMode(
         IntakeConstants.arm_neutralmode_Coast ? NeutralModeValue.Coast : NeutralModeValue.Brake);
+
+    armConfigs.CurrentLimits.SupplyCurrentLowerLimit = 15;
+
+    armConfigs.CurrentLimits.SupplyCurrentLimitEnable = true;
 
     // Set motor inversion based on desired rotation direction
     armConfigs.MotorOutput.withInverted(

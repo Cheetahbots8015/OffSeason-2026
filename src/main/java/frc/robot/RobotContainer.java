@@ -35,6 +35,7 @@ import frc.robot.commands.IntakeCommands.IntakeSHMCommand;
 import frc.robot.commands.OutakeCommand;
 import frc.robot.commands.ShooterCommands.ShootOnMoveDefaultCommand;
 import frc.robot.commands.ShooterCommands.ShootOnMoveTriggerCommand;
+import frc.robot.commands.ShooterCommands.ShootVelocityVoltageCommand;
 import frc.robot.commands.TurretCommands.TurretPositionVoltage;
 import frc.robot.constants.ContainerConstants;
 import frc.robot.constants.ShootOnMoveConstants;
@@ -73,6 +74,8 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   private final CommandXboxController controller = new CommandXboxController(0);
+
+  private final CommandXboxController subController = new CommandXboxController(1);
 
   private final Drive drive;
   private final IntakeSubsystem intake;
@@ -145,6 +148,10 @@ public class RobotContainer {
 
     // Set up auto routines
     NamedCommands.registerCommand("Intake4", new IntakeAutoCommand(intake, 4));
+    NamedCommands.registerCommand(
+        "Shoot",
+        new ShootOnMoveTriggerCommand(
+            drive, turret, hood, shooter, indexer, feeder, shootOnMoveCalculator));
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
     autoChooser.addOption(
         "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
@@ -212,11 +219,18 @@ public class RobotContainer {
     controller.leftTrigger().whileTrue(new IntakeCommand(intake));
     turret.setDefaultCommand(
         new ShootOnMoveDefaultCommand(drive, turret, hood, shootOnMoveCalculator));
+
     controller
         .rightTrigger()
         .whileTrue(
             new ShootOnMoveTriggerCommand(
                 drive, turret, hood, shooter, indexer, feeder, shootOnMoveCalculator));
+
+    /*
+    controller.rightTrigger().whileTrue(new ShootVelocityVoltageCommand(shooter));
+    controller.rightTrigger().whileTrue(new IndexerVelocityVoltageCommand(indexer, controller));
+    controller.rightTrigger().whileTrue(new FeederVelocityVoltageCommand(feeder));
+    */
     controller
         .rightTrigger()
         .whileTrue(
@@ -235,6 +249,7 @@ public class RobotContainer {
     controller.x().whileTrue(new OutakeCommand(indexer, feeder));
     controller.rightBumper().whileTrue(new IntakeDriveCommand(intake, 2));
     controller.leftBumper().whileTrue(new IntakeArmCommand(intake, -75));
+    controller.a().whileTrue(new ShootVelocityVoltageCommand(shooter));
   }
 
   /**

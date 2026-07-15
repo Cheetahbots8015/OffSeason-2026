@@ -1,13 +1,13 @@
-# Shoot-on-the-move calibration data
+# Shoot-on-the-move calibration data,,
 # Format: distanceMeters, flywheelRps, projectileSpeedMps
-# Replace these placeholder values with measured data.
-# Measured triples: for each distance, record the flywheel speed setpoint and the actual projectile exit speed.
+# Replace these placeholder values with measured data.,,
+# Measured triples: for each distance, record the flywheel speed setpoint and the actual projectile exit speed.,
 distanceMeters,flywheelRps,projectileSpeedMps
-2.5,44.6,4.60
-2.6,46.2,4.79
-2.775,47.77,4.90
-2.916,49.36,4.99
-3.018,50.96,5.22
-3.182,51.75,5.31
-3.490,53.34,5.52
-3.773,55.73,5.77
+3.1036,44.6,5.835166667
+3.2036,46.2,6.0445
+3.3786,47.77,6.249908333
+3.5196,49.36,6.457933333
+3.6216,50.96,6.667266667
+3.7856,51.75,6.770625
+4.0936,53.34,6.97865
+4.3766,55.73,7.291341667
