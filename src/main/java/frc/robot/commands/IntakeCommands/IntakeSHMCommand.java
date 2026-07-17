@@ -22,7 +22,7 @@ public class IntakeSHMCommand extends Command {
     if (CheetahUtil.isNear(m_subsystem.getInput().ArmPositionRad, -60, 5)) {
       m_subsystem.setArmPosition(-75);
     } else {
-      m_subsystem.setArmPosition(-60);
+      m_subsystem.setArmPosition(-50);
     }
   }
 

@@ -2,10 +2,15 @@ package frc.robot.commands.ShooterCommands;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.feeder.FeederSubsystem;
 import frc.robot.subsystems.hood.HoodSubsystem;
+import frc.robot.subsystems.indexer.IndexerSubsystem;
+import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.turret.TurretSubsystem;
+import frc.robot.util.CheetahUtil;
 import frc.robot.util.ShootOnMoveCalculator;
 import org.littletonrobotics.junction.Logger;
 
@@ -16,20 +21,31 @@ import org.littletonrobotics.junction.Logger;
  * robot's field-relative pose and chassis speeds, runs the shoot-on-the-move solver, and commands
  * the turret and shooter.
  */
-public class ShootOnMoveDefaultCommand extends Command {
+public class ShootFarOnMoveTriggerCommand extends Command {
   private final Drive drive;
   private final TurretSubsystem turret;
   private final HoodSubsystem hood;
+  private final ShooterSubsystem shooter;
+  private final IndexerSubsystem indexer;
+  private final FeederSubsystem feeder;
   private final ShootOnMoveCalculator calculator;
 
-  public ShootOnMoveDefaultCommand(
-      Drive drive, TurretSubsystem turret, HoodSubsystem hood, ShootOnMoveCalculator calculator) {
+  public ShootFarOnMoveTriggerCommand(
+      Drive drive,
+      TurretSubsystem turret,
+      HoodSubsystem hood,
+      ShooterSubsystem shooter,
+      IndexerSubsystem indexer,
+      FeederSubsystem feeder,
+      ShootOnMoveCalculator calculator) {
     this.drive = drive;
     this.turret = turret;
     this.hood = hood;
+    this.shooter = shooter;
+    this.indexer = indexer;
+    this.feeder = feeder;
     this.calculator = calculator;
-
-    addRequirements(turret);
+    addRequirements(turret, shooter, indexer, feeder, hood);
   }
 
   @Override
@@ -49,6 +65,8 @@ public class ShootOnMoveDefaultCommand extends Command {
     double FarShooterSetpointRadPerSec = params.farFlyWheelSpeedRps * 2.0 * Math.PI;
 
     double turretOffset = 60;
+    shooter.VelocityVoltage(FarShooterSetpointRadPerSec);
+    hood.setPosition(20);
 
     double turretSetpoint = wrapTo180(turretSetpointDeg + turretOffset);
     if (turretSetpoint > 170) {
@@ -58,18 +76,31 @@ public class ShootOnMoveDefaultCommand extends Command {
     } else {
       turret.setPosition(turretSetpoint);
     }
-    // hood.setPosition(0);
-
+    if (CheetahUtil.isNear(turret.getPosition(), turretSetpoint, 10)
+        && CheetahUtil.isNear(FarShooterSetpointRadPerSec, shooter.getMotorVelocity(), 10)) {
+      indexer.VelocityVoltage(
+          SmartDashboard.getNumber("indexerHorizontalVelocity", 0),
+          SmartDashboard.getNumber("indexerVerticleVelocity", 0));
+      feeder.setFeederVelocityVoltage(SmartDashboard.getNumber("feederVelocity", 0));
+    } else {
+      indexer.setMotorVoltage(0, 0);
+      feeder.setFeederVoltage(0);
+    }
     Logger.recordOutput("ShootOnMove/EffectiveTarget", params.effectiveTarget);
     Logger.recordOutput("ShootOnMove/TurretSetpointDeg", turretSetpointDeg);
     Logger.recordOutput("ShootOnMove/FinalDegree", turretSetpoint);
     Logger.recordOutput("ShootOnMove/ShooterSetpointRadPerSec", shooterSetpointRadPerSec);
-    Logger.recordOutput("ShootOnMove/FarShooterSetpointRadPerSec", FarShooterSetpointRadPerSec);
     Logger.recordOutput("ShootOnMove/FieldTurretAngleRad", params.turretAngle.getRadians());
+    Logger.recordOutput("ShootOnMove/FarShooterSetpointRadPerSec", FarShooterSetpointRadPerSec);
   }
 
   @Override
-  public void end(boolean interrupted) {}
+  public void end(boolean interrupted) {
+    shooter.setMotorVoltage(0.0);
+    indexer.setMotorVoltage(0, 0);
+    feeder.setFeederVoltage(0);
+    hood.setPosition(0);
+  }
 
   @Override
   public boolean isFinished() {

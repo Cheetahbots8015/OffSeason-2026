@@ -17,7 +17,7 @@ public final class ShootOnMoveConstants {
   public static final Translation2d kTurretOffsetMeters = new Translation2d(0.122, -0.122);
 
   /** Number of iterations for the effective-target convergence solver. */
-  public static final int kConvergenceIterations = 3;
+  public static final int kConvergenceIterations = 4;
 
   /**
    * Flywheel curve: PredictedVelocity = sqrt(distance * kFlywheelCurveSlope +

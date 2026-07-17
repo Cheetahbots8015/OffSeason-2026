@@ -278,92 +278,63 @@ public class ShootOnMoveCalculator {
     Rotation2d robotHeading = robotPose.getRotation();
     Translation2d target = getTarget();
     Translation2d effectiveTarget = target;
+    Translation2d fareffectiveTarget = target;
     double distance = effectiveTarget.getDistance(robotPos);
-    double hoodPosition = 0.0;
+    double fardistance = fareffectiveTarget.getDistance(robotPos);
 
-    if (distance < ShootOnMoveConstants.switchDistanceMeters) {
-      for (int i = 0; i < ShootOnMoveConstants.kConvergenceIterations; i++) {
-        distance = effectiveTarget.getDistance(robotPos);
-        double lookupDistance =
-            Math.max(0.0, distance - ShootOnMoveConstants.kTargetDistanceOffsetMeters);
-        double flywheelSpeed = distanceToFlywheelSpeed.get(lookupDistance);
-        double projectileSpeed = projectileSpeedSlope * flywheelSpeed + projectileSpeedIntercept;
-        projectileSpeed *= Math.cos(Math.toRadians(ShootOnMoveConstants.hoodDefaultPosition));
-        // TODO: hood position
-        double shotTime = distance / projectileSpeed;
-        Logger.recordOutput("ShootOnMove/distance", distance);
-        Logger.recordOutput("ShootOnMove/shotTime", shotTime);
+    for (int i = 0; i < ShootOnMoveConstants.kConvergenceIterations; i++) {
+      distance = effectiveTarget.getDistance(robotPos);
+      fardistance = fareffectiveTarget.getDistance(robotPos);
 
-        // Velocity of the shooter exit point due to chassis translation.
-        Translation2d turretVelocity =
-            new Translation2d(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond);
+      double flywheelSpeed = distanceToFlywheelSpeed.get(distance);
+      double farflywheelSpeed = farDistanceToFlywheelSpeed.get(distance);
 
-        // Chassis rotation contribution: rotate the robot-frame turret offset into field frame
-        // and compute omega x r.
-        double robotOmega = chassisSpeeds.omegaRadiansPerSecond;
-        Translation2d turretOffsetField =
-            ShootOnMoveConstants.kTurretOffsetMeters.rotateBy(robotHeading);
-        double chassisRotVx = -robotOmega * turretOffsetField.getY();
-        double chassisRotVy = robotOmega * turretOffsetField.getX();
-        turretVelocity = turretVelocity.plus(new Translation2d(chassisRotVx, chassisRotVy));
+      double projectileSpeed = projectileSpeedSlope * flywheelSpeed + projectileSpeedIntercept;
+      double farprojectileSpeed =
+          farProjectileSpeedSlope * farflywheelSpeed + farProjectileSpeedIntercept;
 
-        // Back-calculate the effective target location at the moment the shot was released.
-        effectiveTarget = target.minus(turretVelocity.times(shotTime));
-      }
-    } else {
-      for (int i = 0; i < ShootOnMoveConstants.kConvergenceIterations; i++) {
-        distance = effectiveTarget.getDistance(robotPos);
-        double lookupDistance =
-            Math.max(0.0, distance - ShootOnMoveConstants.kTargetDistanceOffsetMeters);
-        double flywheelSpeed = farDistanceToFlywheelSpeed.get(lookupDistance);
-        double projectileSpeed =
-            farProjectileSpeedSlope * flywheelSpeed + farProjectileSpeedIntercept;
-        projectileSpeed *=
-            Math.cos(
-                Math.toRadians(ShootOnMoveConstants.hoodDefaultPosition)
-                    - Math.toRadians(ShootOnMoveConstants.hoodPositionOffset));
-        // TODO: hood position
-        double shotTime = distance / projectileSpeed;
+      projectileSpeed *= Math.cos(Math.toRadians(ShootOnMoveConstants.hoodDefaultPosition));
+      farprojectileSpeed *=
+          Math.cos(
+              Math.toRadians(
+                  ShootOnMoveConstants.hoodDefaultPosition
+                      - ShootOnMoveConstants.hoodPositionOffset));
 
-        Logger.recordOutput("ShootOnMove/distance", distance);
-        Logger.recordOutput("ShootOnMove/shotTime", shotTime);
+      double shotTime = distance / projectileSpeed;
+      double farshotTime = distance / farprojectileSpeed;
+      Logger.recordOutput("ShootOnMove/distance", distance);
+      Logger.recordOutput("ShootOnMove/shotTime", shotTime);
+      Logger.recordOutput("ShootOnMove/farShotTime", farshotTime);
 
-        // Velocity of the shooter exit point due to chassis translation.
-        Translation2d turretVelocity =
-            new Translation2d(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond);
+      // Velocity of the shooter exit point due to chassis translation.
+      Translation2d turretVelocity =
+          new Translation2d(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond);
 
-        // Chassis rotation contribution: rotate the robot-frame turret offset into field frame
-        // and compute omega x r.
-        double robotOmega = chassisSpeeds.omegaRadiansPerSecond;
-        Translation2d turretOffsetField =
-            ShootOnMoveConstants.kTurretOffsetMeters.rotateBy(robotHeading);
-        double chassisRotVx = -robotOmega * turretOffsetField.getY();
-        double chassisRotVy = robotOmega * turretOffsetField.getX();
-        turretVelocity = turretVelocity.plus(new Translation2d(chassisRotVx, chassisRotVy));
+      // Chassis rotation contribution: rotate the robot-frame turret offset into field frame
+      // and compute omega x r.
+      double robotOmega = chassisSpeeds.omegaRadiansPerSecond;
+      Translation2d turretOffsetField =
+          ShootOnMoveConstants.kTurretOffsetMeters.rotateBy(robotHeading);
+      double chassisRotVx = -robotOmega * turretOffsetField.getY();
+      double chassisRotVy = robotOmega * turretOffsetField.getX();
+      turretVelocity = turretVelocity.plus(new Translation2d(chassisRotVx, chassisRotVy));
 
-        // Back-calculate the effective target location at the moment the shot was released.
-        effectiveTarget = target.minus(turretVelocity.times(shotTime));
-
-        hoodPosition = ShootOnMoveConstants.hoodPositionOffset; // Set hood position for far shots
-      }
+      // Back-calculate the effective target location at the moment the shot was released.
+      effectiveTarget = target.minus(turretVelocity.times(shotTime));
+      fareffectiveTarget = target.minus(turretVelocity.times(farshotTime));
     }
 
     double finalDistance = effectiveTarget.getDistance(robotPos);
-    double finalLookupDistance =
-        Math.max(0.0, finalDistance - ShootOnMoveConstants.kTargetDistanceOffsetMeters);
-    double flywheelSpeed;
-    if (distance < ShootOnMoveConstants.switchDistanceMeters) {
-      flywheelSpeed = distanceToFlywheelSpeed.get(finalLookupDistance);
-    } else {
-      flywheelSpeed = farDistanceToFlywheelSpeed.get(finalLookupDistance);
-    }
+    double farFinalDistance = fareffectiveTarget.getDistance(robotPos);
+    double flywheelSpeed = distanceToFlywheelSpeed.get(finalDistance);
+    double farflywheelSpeed = farDistanceToFlywheelSpeed.get(farFinalDistance);
 
     // Aim from the turret's actual field position, not the robot center.
     Translation2d turretFieldPos =
         robotPos.plus(ShootOnMoveConstants.kTurretOffsetMeters.rotateBy(robotHeading));
     Rotation2d turretAngle = effectiveTarget.minus(turretFieldPos).getAngle();
 
-    return new ShotParameters(effectiveTarget, turretAngle, flywheelSpeed, hoodPosition);
+    return new ShotParameters(effectiveTarget, turretAngle, flywheelSpeed, farflywheelSpeed);
   }
 
   /** Holds the result of a shoot-on-the-move calculation. */
@@ -371,17 +342,17 @@ public class ShootOnMoveCalculator {
     public final Translation2d effectiveTarget;
     public final Rotation2d turretAngle;
     public final double flywheelSpeedRps;
-    public final double hoodPosition;
+    public final double farFlyWheelSpeedRps;
 
     public ShotParameters(
         Translation2d effectiveTarget,
         Rotation2d turretAngle,
         double flywheelSpeedRps,
-        double hoodPosition) {
+        double farFlywheelSpeedRps) {
       this.effectiveTarget = effectiveTarget;
       this.turretAngle = turretAngle;
       this.flywheelSpeedRps = flywheelSpeedRps;
-      this.hoodPosition = hoodPosition;
+      this.farFlyWheelSpeedRps = farFlywheelSpeedRps;
     }
   }
 }

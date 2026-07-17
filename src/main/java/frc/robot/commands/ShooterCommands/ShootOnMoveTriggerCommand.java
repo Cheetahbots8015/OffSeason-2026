@@ -62,6 +62,7 @@ public class ShootOnMoveTriggerCommand extends Command {
     double turretSetpointDeg = params.turretAngle.minus(robotHeading).getDegrees();
 
     double shooterSetpointRadPerSec = params.flywheelSpeedRps * 2.0 * Math.PI;
+    double FarShooterSetpointRadPerSec = params.farFlyWheelSpeedRps * 2.0 * Math.PI;
 
     double turretOffset = 60;
     shooter.VelocityVoltage(shooterSetpointRadPerSec);
@@ -74,9 +75,9 @@ public class ShootOnMoveTriggerCommand extends Command {
     } else {
       turret.setPosition(turretSetpoint);
     }
-    hood.setPosition(Math.max(0.0, Math.min(params.hoodPosition, 20.0)));
+    hood.setPosition(0);
     if (CheetahUtil.isNear(turret.getPosition(), turretSetpoint, 10)
-        && CheetahUtil.isNear(shooterSetpointRadPerSec, shooter.getMotorVelocity(), 20)) {
+        && CheetahUtil.isNear(shooterSetpointRadPerSec, shooter.getMotorVelocity(), 10)) {
       indexer.VelocityVoltage(
           SmartDashboard.getNumber("indexerHorizontalVelocity", 0),
           SmartDashboard.getNumber("indexerVerticleVelocity", 0));
@@ -90,7 +91,7 @@ public class ShootOnMoveTriggerCommand extends Command {
     Logger.recordOutput("ShootOnMove/FinalDegree", turretSetpoint);
     Logger.recordOutput("ShootOnMove/ShooterSetpointRadPerSec", shooterSetpointRadPerSec);
     Logger.recordOutput("ShootOnMove/FieldTurretAngleRad", params.turretAngle.getRadians());
-    Logger.recordOutput("ShootOnMove/HoodSetpoint", params.hoodPosition);
+    Logger.recordOutput("ShootOnMove/FarShooterSetpointRadPerSec", FarShooterSetpointRadPerSec);
   }
 
   @Override

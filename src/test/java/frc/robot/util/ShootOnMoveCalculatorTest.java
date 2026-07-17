@@ -95,32 +95,4 @@ class ShootOnMoveCalculatorTest {
         params.effectiveTarget.getY() < BLUE_TARGET.getY(),
         "CCW rotation should shift effective target in -Y when turret is offset +X");
   }
-
-  @Test
-  void farShotUsesHigherHoodPosition() {
-    // Close shot: should use default hood position
-    Pose2d closePose = new Pose2d(new Translation2d(7.0, 4.0346), new Rotation2d());
-
-    // Far shot: distance > switchDistanceMeters
-    Pose2d farPose = new Pose2d(new Translation2d(0.0, 0), new Rotation2d());
-
-    ChassisSpeeds speeds = new ChassisSpeeds();
-
-    ShotParameters closeParams = calculator.calculate(closePose, speeds);
-
-    ShotParameters farParams = calculator.calculate(farPose, speeds);
-
-    assertEquals(
-        0.0, closeParams.hoodPosition, 1e-3, "Close shots should use default hood position");
-
-    assertEquals(
-        ShootOnMoveConstants.hoodPositionOffset,
-        farParams.hoodPosition,
-        1e-3,
-        "Far shots should use higher hood position");
-
-    assertTrue(
-        farParams.hoodPosition >= closeParams.hoodPosition,
-        "Far shot should have larger hood angle");
-  }
 }
