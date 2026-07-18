@@ -26,6 +26,7 @@ public class TurretIOTalonFX implements TurretIO {
   private final StatusSignal<AngularVelocity> motorVelocity;
   private final StatusSignal<Voltage> motorAppliedVolts;
   private final StatusSignal<Current> motorCurrent;
+  private boolean turretLocked;
 
   public TurretIOTalonFX() {
     motor = new TalonFX(TurretConstants.kTurretMotorID, "");
@@ -64,6 +65,7 @@ public class TurretIOTalonFX implements TurretIO {
     motorVelocity = motor.getVelocity();
     motorAppliedVolts = motor.getMotorVoltage();
     motorCurrent = motor.getTorqueCurrent();
+    turretLocked = false;
 
     BaseStatusSignal.setUpdateFrequencyForAll(
         TurretConstants.kStatusUpdateFrequency,
@@ -85,6 +87,8 @@ public class TurretIOTalonFX implements TurretIO {
     inputs.motorCurrentAmps = motorCurrent.getValueAsDouble();
 
     inputs.turretPositionDeg = CheetahUtil.turretRotationsToDeg(motorPosition.getValueAsDouble());
+
+    inputs.turretLocked = turretLocked;
   }
 
   @Override
@@ -94,7 +98,20 @@ public class TurretIOTalonFX implements TurretIO {
 
   @Override
   public void setPosition(double positionDeg) {
-    // Talon expects rotations for position commands
-    motor.setControl(m_request.withPosition(CheetahUtil.turretDegToRotations(positionDeg)));
+    // Talon expects rotations for position commands\
+    if (!turretLocked) {
+      motor.setControl(m_request.withPosition(CheetahUtil.turretDegToRotations(positionDeg)));
+    } else {
+      motor.setControl(m_request.withPosition(CheetahUtil.turretDegToRotations(0)));
+    }
+  }
+
+  @Override
+  public void lockTurret(boolean lock) {
+    if (lock) {
+      turretLocked = true;
+    } else {
+      turretLocked = false;
+    }
   }
 }

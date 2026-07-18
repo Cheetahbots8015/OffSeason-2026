@@ -12,6 +12,8 @@ public interface TurretIO {
     public double motorCurrentAmps = 0.0;
 
     public double turretPositionDeg = 0.0;
+
+    public boolean turretLocked = false;
   }
 
   /** Update inputs for logging and state. */
@@ -22,4 +24,6 @@ public interface TurretIO {
 
   /** Position control (MotionMagic/PositionVoltage) - angle in radians */
   public default void setPosition(double positionRad) {}
+
+  public default void lockTurret(boolean lock) {}
 }

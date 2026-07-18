@@ -65,7 +65,8 @@ public class ShootOnMoveTriggerCommand extends Command {
     double FarShooterSetpointRadPerSec = params.farFlyWheelSpeedRps * 2.0 * Math.PI;
 
     double turretOffset = 60;
-    shooter.VelocityVoltage(shooterSetpointRadPerSec);
+    shooter.VelocityVoltage(
+        shooterSetpointRadPerSec + SmartDashboard.getNumber("shooterOffset", 0));
 
     double turretSetpoint = wrapTo180(turretSetpointDeg + turretOffset);
     if (turretSetpoint > 170) {
@@ -77,7 +78,10 @@ public class ShootOnMoveTriggerCommand extends Command {
     }
     hood.setPosition(0);
     if (CheetahUtil.isNear(turret.getPosition(), turretSetpoint, 10)
-        && CheetahUtil.isNear(shooterSetpointRadPerSec, shooter.getMotorVelocity(), 10)) {
+        && CheetahUtil.isNear(
+            shooterSetpointRadPerSec + SmartDashboard.getNumber("shooterOffset", 0),
+            shooter.getMotorVelocity(),
+            10)) {
       indexer.VelocityVoltage(
           SmartDashboard.getNumber("indexerHorizontalVelocity", 0),
           SmartDashboard.getNumber("indexerVerticleVelocity", 0));

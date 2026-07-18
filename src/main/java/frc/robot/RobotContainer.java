@@ -37,6 +37,7 @@ import frc.robot.commands.ShooterCommands.ShootFarOnMoveTriggerCommand;
 import frc.robot.commands.ShooterCommands.ShootOnMoveDefaultCommand;
 import frc.robot.commands.ShooterCommands.ShootOnMoveTriggerCommand;
 import frc.robot.commands.ShooterCommands.ShootVelocityVoltageCommand;
+import frc.robot.commands.TurretCommands.TurretLock;
 import frc.robot.commands.TurretCommands.TurretPositionVoltage;
 import frc.robot.constants.ContainerConstants;
 import frc.robot.constants.ShootOnMoveConstants;
@@ -185,6 +186,8 @@ public class RobotContainer {
     SmartDashboard.putNumber("indexerVerticleVelocity", 250);
     SmartDashboard.putNumber("feederVelocity", 300);
 
+    SmartDashboard.putNumber("shooterOffset", 0);
+
     // Set up SysId routines
     configureButtonBindings();
   }
@@ -240,11 +243,30 @@ public class RobotContainer {
         .whileTrue(
             new ShootFarOnMoveTriggerCommand(
                 drive, turret, hood, shooter, indexer, feeder, shootOnMoveCalculator));
+
+    subController.povLeft().onTrue(new TurretLock(turret, true));
+    subController.povRight().onTrue(new TurretLock(turret, false));
+    subController
+        .povUp()
+        .onTrue(
+            Commands.runOnce(
+                () ->
+                    SmartDashboard.putNumber(
+                        "shooterOffset", SmartDashboard.getNumber("shooterOffset", 0.0) + 2.5)));
+    subController
+        .povDown()
+        .onTrue(
+            Commands.runOnce(
+                () ->
+                    SmartDashboard.putNumber(
+                        "shooterOffset", SmartDashboard.getNumber("shooterOffset", 0.0) - 2.5)));
+
     /*
     controller.rightTrigger().whileTrue(new ShootVelocityVoltageCommand(shooter));
     controller.rightTrigger().whileTrue(new IndexerVelocityVoltageCommand(indexer, controller));
     controller.rightTrigger().whileTrue(new FeederVelocityVoltageCommand(feeder));
     */
+
     controller
         .rightTrigger()
         .whileTrue(
