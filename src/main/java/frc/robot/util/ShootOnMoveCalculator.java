@@ -3,16 +3,11 @@ package frc.robot.util;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.Filesystem;
 import frc.robot.constants.ShootOnMoveConstants;
 import frc.robot.constants.ShooterConstants;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
 import org.littletonrobotics.junction.Logger;
@@ -27,17 +22,8 @@ import org.littletonrobotics.junction.Logger;
  */
 public class ShootOnMoveCalculator {
 
-  // Distance (meters) -> flywheel speed (rotations per second)
-  private final InterpolatingDoubleTreeMap distanceToFlywheelSpeed =
-      new InterpolatingDoubleTreeMap();
-  private final InterpolatingDoubleTreeMap farDistanceToFlywheelSpeed =
-      new InterpolatingDoubleTreeMap();
-
-  // Linear model: projectileSpeedMps = m * flywheelRps + b
-  private double projectileSpeedSlope;
-  private double projectileSpeedIntercept;
-  private double farProjectileSpeedSlope;
-  private double farProjectileSpeedIntercept;
+  private final ShotProfile regularProfile = new ShotProfile();
+  private final ShotProfile farProfile = new ShotProfile();
 
   private final Translation2d redTarget;
   private final Translation2d blueTarget;
@@ -54,207 +40,47 @@ public class ShootOnMoveCalculator {
    * existing sqrt-curve regression is used instead.
    */
   private void populateTables() {
-    List<double[]> calibrationData = loadCalibrationDataFromFile();
-    List<double[]> farCalibrationData = loadFarCalibrationDataFromFile();
+    List<double[]> calibrationData =
+        regularProfile.loadFromFile("shoot-on-move-data.csv", "Calibration");
+    List<double[]> farCalibrationData =
+        farProfile.loadFromFile("shoot-on-move-far-data.csv", "FarCalibration");
 
-    // If no calibration data was loaded from file, fall back to the regression estimate.
     if (calibrationData.isEmpty()) {
-      for (double distanceMeters = 1.0; distanceMeters <= 8.0; distanceMeters += 0.5) {
-        double flywheelRps =
-            Math.sqrt(
-                    distanceMeters * ShootOnMoveConstants.kFlywheelCurveSlope
-                        + ShootOnMoveConstants.kFlywheelCurveIntercept)
-                / (2.0 * Math.PI);
-        double projectileSpeedMps =
-            flywheelRps * ShooterConstants.kGear * ShooterConstants.kRadius * 2 * Math.PI;
-        calibrationData.add(new double[] {distanceMeters, flywheelRps, projectileSpeedMps});
-      }
+      regularProfile.generateFallbackData(
+          ShootOnMoveConstants.kFlywheelCurveSlope,
+          ShootOnMoveConstants.kFlywheelCurveIntercept,
+          ShooterConstants.kGear,
+          ShooterConstants.kRadius);
     }
+
     if (farCalibrationData.isEmpty()) {
-      for (double distanceMeters = 1.0; distanceMeters <= 8.0; distanceMeters += 0.5) {
-        double flywheelRps =
-            Math.sqrt(
-                    distanceMeters * ShootOnMoveConstants.kFlywheelCurveSlope
-                        + ShootOnMoveConstants.kFlywheelCurveIntercept)
-                / (2.0 * Math.PI);
-        double projectileSpeedMps =
-            flywheelRps * ShooterConstants.kGear * ShooterConstants.kRadius * 2 * Math.PI;
-        farCalibrationData.add(new double[] {distanceMeters, flywheelRps, projectileSpeedMps});
-      }
+      farProfile.generateFallbackData(
+          ShootOnMoveConstants.kFlywheelCurveSlope,
+          ShootOnMoveConstants.kFlywheelCurveIntercept,
+          ShooterConstants.kGear,
+          ShooterConstants.kRadius);
     }
 
     List<Double> flywheelRpsValues = new ArrayList<>();
     List<Double> projectileSpeedValues = new ArrayList<>();
     for (double[] row : calibrationData) {
-      distanceToFlywheelSpeed.put(row[0], row[1]);
       flywheelRpsValues.add(row[1]);
       projectileSpeedValues.add(row[2]);
     }
-    fitProjectileSpeedRegression(flywheelRpsValues, projectileSpeedValues);
+    regularProfile.fitRegression(flywheelRpsValues, projectileSpeedValues);
 
     List<Double> farFlywheelRpsValues = new ArrayList<>();
     List<Double> farProjectileSpeedValues = new ArrayList<>();
     for (double[] row : farCalibrationData) {
-      farDistanceToFlywheelSpeed.put(row[0], row[1]);
       farFlywheelRpsValues.add(row[1]);
       farProjectileSpeedValues.add(row[2]);
     }
-    farFitProjectileSpeedRegression(farFlywheelRpsValues, farProjectileSpeedValues);
+    farProfile.fitRegression(farFlywheelRpsValues, farProjectileSpeedValues);
 
-    Logger.recordOutput("ShootOnMove/ProjectileSpeedSlope", projectileSpeedSlope);
-    Logger.recordOutput("ShootOnMove/ProjectileSpeedIntercept", projectileSpeedIntercept);
-    Logger.recordOutput("ShootOnMove/FarProjectileSpeedSlope", farProjectileSpeedSlope);
-    Logger.recordOutput("ShootOnMove/FarProjectileSpeedIntercept", farProjectileSpeedIntercept);
-  }
-
-  /**
-   * Loads measured calibration data from {@code deploy/shoot-on-move-data.csv}.
-   *
-   * <p>Expected columns: distanceMeters, flywheelRps, projectileSpeedMps. If the file is missing or
-   * malformed, an empty list is returned.
-   *
-   * @return list of calibration triples {distanceMeters, flywheelRps, projectileSpeedMps}
-   */
-  private List<double[]> loadCalibrationDataFromFile() {
-    List<double[]> data = new ArrayList<>();
-    File file = new File(Filesystem.getDeployDirectory(), "shoot-on-move-data.csv");
-    try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-      String line;
-      boolean firstLine = true;
-      while ((line = reader.readLine()) != null) {
-        line = line.trim();
-        if (line.isEmpty() || line.startsWith("#") || line.startsWith("//")) {
-          continue;
-        }
-        if (firstLine) {
-          firstLine = false;
-          continue;
-        }
-        String[] parts = line.split(",");
-        if (parts.length >= 3) {
-          double distanceMeters = Double.parseDouble(parts[0].trim());
-          double flywheelRps = Double.parseDouble(parts[1].trim());
-          double projectileSpeedMps = Double.parseDouble(parts[2].trim());
-          data.add(new double[] {distanceMeters, flywheelRps, projectileSpeedMps});
-        }
-      }
-      Logger.recordOutput(
-          "ShootOnMove/CalibrationDataLoaded", "Loaded " + data.size() + " entries from file");
-    } catch (Exception e) {
-      Logger.recordOutput(
-          "ShootOnMove/CalibrationDataLoadError",
-          "Failed to load " + file.getAbsolutePath() + ": " + e.getMessage());
-    }
-    return data;
-  }
-
-  private List<double[]> loadFarCalibrationDataFromFile() {
-    List<double[]> data = new ArrayList<>();
-    File file = new File(Filesystem.getDeployDirectory(), "shoot-on-move-far-data.csv");
-    try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-      String line;
-      boolean firstLine = true;
-      while ((line = reader.readLine()) != null) {
-        line = line.trim();
-        if (line.isEmpty() || line.startsWith("#") || line.startsWith("//")) {
-          continue;
-        }
-        if (firstLine) {
-          firstLine = false;
-          continue;
-        }
-        String[] parts = line.split(",");
-        if (parts.length >= 3) {
-          double distanceMeters = Double.parseDouble(parts[0].trim());
-          double flywheelRps = Double.parseDouble(parts[1].trim());
-          double projectileSpeedMps = Double.parseDouble(parts[2].trim());
-          data.add(new double[] {distanceMeters, flywheelRps, projectileSpeedMps});
-        }
-      }
-      Logger.recordOutput(
-          "ShootOnMove/FarCalibrationDataLoaded", "Loaded " + data.size() + " entries from file");
-    } catch (Exception e) {
-      Logger.recordOutput(
-          "ShootOnMove/FarCalibrationDataLoadError",
-          "Failed to load " + file.getAbsolutePath() + ": " + e.getMessage());
-    }
-    return data;
-  }
-
-  /**
-   * Fits a linear regression of projectile speed (m/s) vs flywheel speed (RPS).
-   *
-   * <p>Model: projectileSpeed = slope * flywheelRps + intercept
-   */
-  private void fitProjectileSpeedRegression(
-      List<Double> flywheelRpsValues, List<Double> projectileSpeedValues) {
-    int n = flywheelRpsValues.size();
-    if (n < 2) {
-      projectileSpeedSlope = ShooterConstants.kGear * ShooterConstants.kRadius * Math.PI * 2.0;
-      projectileSpeedIntercept = 0.0;
-      return;
-    }
-
-    double sumX = 0.0;
-    double sumY = 0.0;
-    double sumXY = 0.0;
-    double sumX2 = 0.0;
-    for (int i = 0; i < n; i++) {
-      double x = flywheelRpsValues.get(i);
-      double y = projectileSpeedValues.get(i);
-      sumX += x;
-      sumY += y;
-      sumXY += x * y;
-      sumX2 += x * x;
-    }
-
-    double denominator = n * sumX2 - sumX * sumX;
-    if (Math.abs(denominator) < 1e-9) {
-      projectileSpeedSlope = ShooterConstants.kGear * ShooterConstants.kRadius;
-      projectileSpeedIntercept = 0.0;
-      return;
-    }
-
-    projectileSpeedSlope = (n * sumXY - sumX * sumY) / denominator;
-    projectileSpeedIntercept = (sumY - projectileSpeedSlope * sumX) / n;
-  }
-
-  /**
-   * Fits a linear regression of projectile speed (m/s) vs flywheel speed (RPS) for far shots.
-   *
-   * <p>Model: projectileSpeed = slope * flywheelRps + intercept
-   */
-  private void farFitProjectileSpeedRegression(
-      List<Double> flywheelRpsValues, List<Double> projectileSpeedValues) {
-    int n = flywheelRpsValues.size();
-    if (n < 2) {
-      farProjectileSpeedSlope = ShooterConstants.kGear * ShooterConstants.kRadius * Math.PI * 2.0;
-      farProjectileSpeedIntercept = 0.0;
-      return;
-    }
-
-    double sumX = 0.0;
-    double sumY = 0.0;
-    double sumXY = 0.0;
-    double sumX2 = 0.0;
-    for (int i = 0; i < n; i++) {
-      double x = flywheelRpsValues.get(i);
-      double y = projectileSpeedValues.get(i);
-      sumX += x;
-      sumY += y;
-      sumXY += x * y;
-      sumX2 += x * x;
-    }
-
-    double denominator = n * sumX2 - sumX * sumX;
-    if (Math.abs(denominator) < 1e-9) {
-      farProjectileSpeedSlope = ShooterConstants.kGear * ShooterConstants.kRadius;
-      farProjectileSpeedIntercept = 0.0;
-      return;
-    }
-
-    farProjectileSpeedSlope = (n * sumXY - sumX * sumY) / denominator;
-    farProjectileSpeedIntercept = (sumY - farProjectileSpeedSlope * sumX) / n;
+    Logger.recordOutput("ShootOnMove/ProjectileSpeedSlope", regularProfile.getSlope());
+    Logger.recordOutput("ShootOnMove/ProjectileSpeedIntercept", regularProfile.getIntercept());
+    Logger.recordOutput("ShootOnMove/FarProjectileSpeedSlope", farProfile.getSlope());
+    Logger.recordOutput("ShootOnMove/FarProjectileSpeedIntercept", farProfile.getIntercept());
   }
 
   /** Returns the current alliance target. */
@@ -286,19 +112,16 @@ public class ShootOnMoveCalculator {
       distance = effectiveTarget.getDistance(robotPos);
       fardistance = fareffectiveTarget.getDistance(robotPos);
 
-      double flywheelSpeed = distanceToFlywheelSpeed.get(distance);
-      double farflywheelSpeed = farDistanceToFlywheelSpeed.get(distance);
+      double flywheelSpeed = regularProfile.getFlywheelSpeed(distance);
+      double farflywheelSpeed = farProfile.getFlywheelSpeed(distance);
 
-      double projectileSpeed = projectileSpeedSlope * flywheelSpeed + projectileSpeedIntercept;
+      double projectileSpeed =
+          regularProfile.getProjectileSpeed(
+              flywheelSpeed, ShootOnMoveConstants.hoodDefaultPosition);
       double farprojectileSpeed =
-          farProjectileSpeedSlope * farflywheelSpeed + farProjectileSpeedIntercept;
-
-      projectileSpeed *= Math.cos(Math.toRadians(ShootOnMoveConstants.hoodDefaultPosition));
-      farprojectileSpeed *=
-          Math.cos(
-              Math.toRadians(
-                  ShootOnMoveConstants.hoodDefaultPosition
-                      - ShootOnMoveConstants.hoodPositionOffset));
+          farProfile.getProjectileSpeed(
+              farflywheelSpeed,
+              ShootOnMoveConstants.hoodDefaultPosition - ShootOnMoveConstants.hoodPositionOffset);
 
       double shotTime = distance / projectileSpeed;
       double farshotTime = distance / farprojectileSpeed;
@@ -326,8 +149,8 @@ public class ShootOnMoveCalculator {
 
     double finalDistance = effectiveTarget.getDistance(robotPos);
     double farFinalDistance = fareffectiveTarget.getDistance(robotPos);
-    double flywheelSpeed = distanceToFlywheelSpeed.get(finalDistance);
-    double farflywheelSpeed = farDistanceToFlywheelSpeed.get(farFinalDistance);
+    double flywheelSpeed = regularProfile.getFlywheelSpeed(finalDistance);
+    double farflywheelSpeed = farProfile.getFlywheelSpeed(farFinalDistance);
 
     // Aim from the turret's actual field position, not the robot center.
     Translation2d turretFieldPos =
