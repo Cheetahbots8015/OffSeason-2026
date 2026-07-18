@@ -108,6 +108,17 @@ public abstract class ShootOnMoveAimCommand extends Command {
 }
 ```
 
+The base class `execute()` method does:
+
+```java
+@Override
+public void execute() {
+  double turretSetpoint = computeAim();
+  turret.setPosition(turretSetpoint);
+  onAim(turretSetpoint);
+}
+```
+
 `computeAim()` performs the shared work:
 
 - Convert robot-relative chassis speeds to field-relative.
@@ -125,7 +136,7 @@ Subclasses:
 
 - `ShootOnMoveTriggerCommand extends ShootOnMoveAimCommand`
   - Constructor adds `HoodSubsystem`, `ShooterSubsystem`, `IndexerSubsystem`, `FeederSubsystem`.
-  - Overrides `onAim(double)` to command hood, shooter, indexer, and feeder when aligned.
+  - Overrides `onAim(double)` to command hood, shooter, indexer, and feeder when aligned, after the base class has already set the turret position.
   - Introduces protected hooks so the far variant can override without copying the body:
     - `protected double getFlywheelSpeedRps(ShotParameters params)` → default `params.flywheelSpeedRps`
     - `protected double getHoodPositionDeg()` → default `0.0`
