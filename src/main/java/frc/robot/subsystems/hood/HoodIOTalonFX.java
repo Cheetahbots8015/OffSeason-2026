@@ -94,10 +94,9 @@ public class HoodIOTalonFX implements HoodIO {
   @Override
   public void setPosition(double positionDeg) {
     // Talon expects rotations for position commands
-    if (!hoodNeutral){
+    if (!hoodNeutral) {
       motor.setControl(m_request.withPosition(CheetahUtil.hoodDegToRotations(positionDeg)));
-    }
-    else{
+    } else {
       motor.setVoltage(0);
     }
   }
