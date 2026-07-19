@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.HoodCommands.HoodNeutral;
 import frc.robot.commands.HoodCommands.HoodPositionCommand;
 import frc.robot.commands.IntakeCommands.IntakeArmCommand;
 import frc.robot.commands.IntakeCommands.IntakeAutoCommand;
@@ -36,7 +37,6 @@ import frc.robot.commands.OutakeCommand;
 import frc.robot.commands.ShooterCommands.ShootFarOnMoveTriggerCommand;
 import frc.robot.commands.ShooterCommands.ShootOnMoveDefaultCommand;
 import frc.robot.commands.ShooterCommands.ShootOnMoveTriggerCommand;
-import frc.robot.commands.ShooterCommands.ShootVelocityVoltageCommand;
 import frc.robot.commands.TurretCommands.TurretLock;
 import frc.robot.commands.TurretCommands.TurretPositionVoltage;
 import frc.robot.constants.ContainerConstants;
@@ -246,6 +246,8 @@ public class RobotContainer {
 
     subController.povLeft().onTrue(new TurretLock(turret, true));
     subController.povRight().onTrue(new TurretLock(turret, false));
+    subController.x().onTrue(new HoodNeutral(hood, true));
+    subController.b().onTrue(new HoodNeutral(hood, false));
     subController
         .povUp()
         .onTrue(
@@ -285,10 +287,6 @@ public class RobotContainer {
     controller.x().whileTrue(new OutakeCommand(indexer, feeder));
     controller.rightBumper().whileTrue(new IntakeDriveCommand(intake, 2));
     controller.leftBumper().whileTrue(new IntakeArmCommand(intake, -75));
-    controller.a().whileTrue(new ShootVelocityVoltageCommand(shooter));
-
-    controller.povLeft().whileTrue(new HoodPositionCommand(hood, 20));
-    controller.povRight().whileTrue(new HoodPositionCommand(hood, 0));
   }
 
   /**

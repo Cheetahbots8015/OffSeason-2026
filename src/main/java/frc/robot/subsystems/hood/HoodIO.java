@@ -22,4 +22,7 @@ public interface HoodIO {
 
   /** Position control (MotionMagic) - angle in radians */
   public default void setPosition(double positionRad) {}
+
+  /** Set hood neutral state */
+  public default void setHoodNeutral(boolean neutral) {}
 }

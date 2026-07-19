@@ -26,6 +26,8 @@ public class HoodIOTalonFX implements HoodIO {
   private final StatusSignal<Voltage> motorAppliedVolts;
   private final StatusSignal<Current> motorCurrent;
 
+  private boolean hoodNeutral = false;
+
   public HoodIOTalonFX() {
     motor = new TalonFX(HoodConstants.kHoodMotorID, "canivore");
 
@@ -92,6 +94,16 @@ public class HoodIOTalonFX implements HoodIO {
   @Override
   public void setPosition(double positionDeg) {
     // Talon expects rotations for position commands
-    motor.setControl(m_request.withPosition(CheetahUtil.hoodDegToRotations(positionDeg)));
+    if (!hoodNeutral){
+      motor.setControl(m_request.withPosition(CheetahUtil.hoodDegToRotations(positionDeg)));
+    }
+    else{
+      motor.setVoltage(0);
+    }
+  }
+
+  @Override
+  public void setHoodNeutral(boolean neutral) {
+    hoodNeutral = neutral;
   }
 }

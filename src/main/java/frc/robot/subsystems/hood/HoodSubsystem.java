@@ -39,6 +39,10 @@ public class HoodSubsystem extends SubsystemBase {
     io.setPosition(positionDeg);
   }
 
+  public void setHoodNeutral(boolean neutral) {
+    io.setHoodNeutral(neutral);
+  }
+
   public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
     return sysId.quasistatic(direction);
   }

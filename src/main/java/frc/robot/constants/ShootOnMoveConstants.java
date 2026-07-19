@@ -40,4 +40,7 @@ public final class ShootOnMoveConstants {
 
   /** Default hood position (degrees) for the shooter. */
   public static final double hoodDefaultPosition = 71;
+
+  /** Whether to use the regression for flywheel speed calculation instead of the lookup table. */
+  public static final boolean useRegression = true;
 }

@@ -105,8 +105,8 @@ public class ShootOnMoveCalculator {
     Translation2d target = getTarget();
     Translation2d effectiveTarget = target;
     Translation2d fareffectiveTarget = target;
-    double distance = effectiveTarget.getDistance(robotPos);
-    double fardistance = fareffectiveTarget.getDistance(robotPos);
+    double distance;
+    double fardistance;
 
     for (int i = 0; i < ShootOnMoveConstants.kConvergenceIterations; i++) {
       distance = effectiveTarget.getDistance(robotPos);
@@ -124,7 +124,7 @@ public class ShootOnMoveCalculator {
               ShootOnMoveConstants.hoodDefaultPosition - ShootOnMoveConstants.hoodPositionOffset);
 
       double shotTime = distance / projectileSpeed;
-      double farshotTime = distance / farprojectileSpeed;
+      double farshotTime = fardistance / farprojectileSpeed;
       Logger.recordOutput("ShootOnMove/distance", distance);
       Logger.recordOutput("ShootOnMove/shotTime", shotTime);
       Logger.recordOutput("ShootOnMove/farShotTime", farshotTime);
@@ -149,9 +149,16 @@ public class ShootOnMoveCalculator {
 
     double finalDistance = effectiveTarget.getDistance(robotPos);
     double farFinalDistance = fareffectiveTarget.getDistance(robotPos);
-    double flywheelSpeed = regularProfile.getFlywheelSpeed(finalDistance);
-    double farflywheelSpeed = farProfile.getFlywheelSpeed(farFinalDistance);
-
+    double flywheelSpeed;
+    double farflywheelSpeed;
+    if (ShootOnMoveConstants.useRegression) {
+      flywheelSpeed = -0.0484 * finalDistance * finalDistance + 6.5589 * finalDistance + 26.142;
+      farflywheelSpeed =
+          0.9565 * farFinalDistance * farFinalDistance - 5.6649 * farFinalDistance + 51.237;
+    } else {
+      flywheelSpeed = regularProfile.getFlywheelSpeed(finalDistance);
+      farflywheelSpeed = farProfile.getFlywheelSpeed(farFinalDistance);
+    }
     // Aim from the turret's actual field position, not the robot center.
     Translation2d turretFieldPos =
         robotPos.plus(ShootOnMoveConstants.kTurretOffsetMeters.rotateBy(robotHeading));
