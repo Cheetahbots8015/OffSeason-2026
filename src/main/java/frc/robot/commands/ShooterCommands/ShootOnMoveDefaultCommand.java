@@ -6,6 +6,7 @@ import frc.robot.subsystems.turret.TurretSubsystem;
 import frc.robot.util.ShootOnMoveCalculator;
 
 public class ShootOnMoveDefaultCommand extends ShootOnMoveAimCommand {
+  // Kept only for constructor compatibility with RobotContainer; not used in default aiming.
   private final HoodSubsystem hood;
 
   public ShootOnMoveDefaultCommand(

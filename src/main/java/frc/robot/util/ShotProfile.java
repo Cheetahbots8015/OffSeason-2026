@@ -101,7 +101,6 @@ final class ShotProfile {
   void generateFallbackData(double slope, double intercept, double gear, double radius) {
     for (double distanceMeters = 1.0; distanceMeters <= 8.0; distanceMeters += 0.5) {
       double flywheelRps = Math.sqrt(distanceMeters * slope + intercept) / (2.0 * Math.PI);
-      double projectileSpeedMps = flywheelRps * gear * radius * 2 * Math.PI;
       distanceToFlywheelSpeed.put(distanceMeters, flywheelRps);
     }
   }

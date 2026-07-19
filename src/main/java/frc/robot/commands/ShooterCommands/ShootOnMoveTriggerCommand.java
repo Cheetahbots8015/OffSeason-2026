@@ -68,6 +68,7 @@ public class ShootOnMoveTriggerCommand extends ShootOnMoveAimCommand {
 
   @Override
   public void end(boolean interrupted) {
+    super.end(interrupted);
     onEndShooting();
   }
 

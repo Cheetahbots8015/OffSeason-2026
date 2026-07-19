@@ -24,7 +24,7 @@ public abstract class ShootOnMoveAimCommand extends Command {
   }
 
   @Override
-  public void execute() {
+  public final void execute() {
     AimResult result = computeAim();
     turret.setPosition(result.turretSetpointDeg());
     onAim(result);
