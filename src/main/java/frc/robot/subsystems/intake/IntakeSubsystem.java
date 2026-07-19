@@ -44,6 +44,10 @@ public class IntakeSubsystem extends SubsystemBase {
     io.setArmPosition(radians);
   }
 
+  public void resetArm() {
+    io.resetArm();
+  }
+
   public IntakeIOInputs getInput() {
     return inputs;
   }
