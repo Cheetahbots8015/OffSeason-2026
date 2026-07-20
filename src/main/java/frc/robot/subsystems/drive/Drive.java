@@ -217,7 +217,7 @@ public class Drive extends FullSubsystem {
         return true;
       }
       // check distance
-      if (mt2.rawFiducials[0].distToCamera > 4.0) {
+      if (mt2.rawFiducials[0].distToCamera > 6.0) {
         return true;
       }
       // check if allowed
@@ -233,7 +233,7 @@ public class Drive extends FullSubsystem {
     }
     // if multiple tags
     else {
-      return mt2.avgTagDist > 4.0;
+      return mt2.avgTagDist > 6.0;
     }
   }
 
@@ -247,13 +247,13 @@ public class Drive extends FullSubsystem {
         }
       }
       if (allowed) {
-        StdDev += i.distToCamera * i.ambiguity;
+        StdDev += i.distToCamera * i.ambiguity * 0.5;
       }
     }
     StdDev /= mt2.tagCount;
     if (StdDev < 0.5) {
       StdDev = 0.5;
-    } else if (StdDev > 5) {
+    } else if (StdDev > 6) {
       StdDev = 999999;
     }
     return StdDev;
@@ -335,7 +335,7 @@ public class Drive extends FullSubsystem {
       } else {
         doRejectUpdate = shouldReject(mt2_swerve, validateID);
       }
-      if (!doRejectUpdate) {
+      if (!doRejectUpdate && SmartDashboard.getBoolean("swerveLimelightEnable", true)) {
         double StdDev = calculateStdDevs(mt2_swerve, validateID);
         if (StdDev != 9999999) {
           poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(StdDev, StdDev, 9999999));
@@ -368,7 +368,7 @@ public class Drive extends FullSubsystem {
       } else {
         doRejectUpdate = shouldReject(mt2_left, validateID);
       }
-      if (!doRejectUpdate) {
+      if (!doRejectUpdate && SmartDashboard.getBoolean("leftLimelightEnable", true)) {
         double StdDev = calculateStdDevs(mt2_left, validateID);
         if (StdDev != 9999999) {
           poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(StdDev, StdDev, 9999999));
@@ -400,7 +400,7 @@ public class Drive extends FullSubsystem {
       } else {
         doRejectUpdate = shouldReject(mt2_rear, validateID);
       }
-      if (!doRejectUpdate) {
+      if (!doRejectUpdate && SmartDashboard.getBoolean("rearLimelightEnable", true)) {
         double StdDev = calculateStdDevs(mt2_rear, validateID);
         if (StdDev != 9999999) {
           poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(StdDev, StdDev, 9999999));

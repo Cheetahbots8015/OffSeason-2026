@@ -17,7 +17,7 @@ package frc.robot.energy;
 public final class CurrentLimits {
   public static final double driveMinLimitAmps = 10.0;
   public static final double driveMaxLimitAmps = 40.0;
-  public static final double driveAutoLimitAmps = 60.0;
+  public static final double driveAutoLimitAmps = 40.0;
   public static final double driveProbeRateBrownout = 50.0; // Amps/second
 
   private CurrentLimits() {}

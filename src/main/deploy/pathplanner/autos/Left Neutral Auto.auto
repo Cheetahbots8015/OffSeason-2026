@@ -31,9 +31,22 @@
                       }
                     },
                     {
-                      "type": "path",
+                      "type": "deadline",
                       "data": {
-                        "pathName": "Left Neutral Back"
+                        "commands": [
+                          {
+                            "type": "path",
+                            "data": {
+                              "pathName": "Left Neutral Back"
+                            }
+                          },
+                          {
+                            "type": "named",
+                            "data": {
+                              "name": "ShooterWarmUp"
+                            }
+                          }
+                        ]
                       }
                     }
                   ]

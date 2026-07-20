@@ -37,6 +37,8 @@ import frc.robot.commands.OutakeCommand;
 import frc.robot.commands.ShooterCommands.ShootFarOnMoveTriggerCommand;
 import frc.robot.commands.ShooterCommands.ShootOnMoveDefaultCommand;
 import frc.robot.commands.ShooterCommands.ShootOnMoveTriggerCommand;
+import frc.robot.commands.ShooterCommands.ShootPassCommand;
+import frc.robot.commands.ShooterCommands.ShootVelocityVoltageCommand;
 import frc.robot.commands.TurretCommands.TurretLock;
 import frc.robot.commands.TurretCommands.TurretPositionVoltage;
 import frc.robot.constants.ContainerConstants;
@@ -158,6 +160,7 @@ public class RobotContainer {
         "LongShoot",
         new ShootFarOnMoveTriggerCommand(
             drive, turret, hood, shooter, indexer, feeder, shootOnMoveCalculator));
+    NamedCommands.registerCommand("ShooterWarmUp", new ShootVelocityVoltageCommand(shooter));
     NamedCommands.registerCommand("IntakeSHM", new IntakeSHMCommand(intake));
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
     /*
@@ -179,7 +182,7 @@ public class RobotContainer {
 
     SmartDashboard.putNumber("feederVolt", 5);
     SmartDashboard.putNumber("shooterVolt", 5);
-    SmartDashboard.putNumber("shooterVelocity", 250);
+    SmartDashboard.putNumber("shooterVelocity", 200);
     SmartDashboard.putNumber("indexerHorizontalVolt", 4);
     SmartDashboard.putNumber("indexerVerticleVolt", 4);
     SmartDashboard.putNumber("indexerHorizontalVelocity", 250);
@@ -188,7 +191,10 @@ public class RobotContainer {
 
     SmartDashboard.putNumber("shooterOffset", 0);
 
-    // Set up SysId routines
+    SmartDashboard.putBoolean("swerveLimelightEnable", true);
+    SmartDashboard.putBoolean("leftLimelightEnable", true);
+    SmartDashboard.putBoolean("rearLimelightEnable", true);
+
     configureButtonBindings();
   }
 
@@ -210,9 +216,12 @@ public class RobotContainer {
                 -controller.getLeftX() > 0
                     ? Math.pow(controller.getLeftX(), 2)
                     : -Math.pow(controller.getLeftX(), 2),
-            () -> -controller.getRightX()));
-    controller
-        .povUp()
+            () ->
+                -controller.getRightX() > 0
+                    ? Math.pow(controller.getRightX(), 2)
+                    : -Math.pow(controller.getRightX(), 2)));
+    subController
+        .leftBumper()
         .onTrue(
             Commands.runOnce(
                     () -> {
@@ -225,6 +234,10 @@ public class RobotContainer {
                     },
                     drive)
                 .ignoringDisable(true));
+
+    subController
+        .rightTrigger()
+        .whileTrue(new ShootPassCommand(drive, turret, shooter, indexer, feeder));
 
     controller.povDown().whileTrue(new TurretPositionVoltage(turret, 0));
     controller.leftTrigger().whileTrue(new IntakeCommand(intake));
@@ -283,7 +296,10 @@ public class RobotContainer {
                         ? Math.pow(controller.getLeftX(), 2) * 0.5
                         : -Math.pow(controller.getLeftX(), 2) * 0.5,
                 () -> -controller.getRightX() * 0.2));
-    controller.rightTrigger().whileTrue(new IntakeSHMCommand(intake));
+    controller
+        .rightTrigger()
+        .and(controller.leftTrigger().negate())
+        .whileTrue(new IntakeSHMCommand(intake));
     controller.x().whileTrue(new OutakeCommand(indexer, feeder));
     controller.rightBumper().whileTrue(new IntakeDriveCommand(intake, 2));
     controller.leftBumper().whileTrue(new IntakeArmCommand(intake, -75));
