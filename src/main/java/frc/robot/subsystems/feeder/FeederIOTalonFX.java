@@ -29,6 +29,7 @@ public class FeederIOTalonFX implements FeederIO {
   private final StatusSignal<AngularVelocity> FeederVelocity;
   private final StatusSignal<Voltage> FeederAppliedVolts;
   private final StatusSignal<Current> FeederCurrent;
+  private final StatusSignal<Current> FeederSupplyCurrent;
 
   public FeederIOTalonFX() {
     feeder = new TalonFX(FeederConstants.feederID, "canivore");
@@ -56,24 +57,28 @@ public class FeederIOTalonFX implements FeederIO {
     FeederVelocity = feeder.getVelocity();
     FeederAppliedVolts = feeder.getMotorVoltage();
     FeederCurrent = feeder.getTorqueCurrent();
+    FeederSupplyCurrent = feeder.getSupplyCurrent();
 
     BaseStatusSignal.setUpdateFrequencyForAll(
         FeederConstants.statusUpdateFrequency,
         FeederPosition,
         FeederVelocity,
         FeederAppliedVolts,
-        FeederCurrent);
+        FeederCurrent,
+        FeederSupplyCurrent);
     ParentDevice.optimizeBusUtilizationForAll(feeder);
   }
 
   @Override
   public void updateInputs(FeederIOInputs inputs) {
-    BaseStatusSignal.refreshAll(FeederPosition, FeederVelocity, FeederAppliedVolts, FeederCurrent);
+    BaseStatusSignal.refreshAll(
+        FeederPosition, FeederVelocity, FeederAppliedVolts, FeederCurrent, FeederSupplyCurrent);
     // Update motor inputs
     inputs.FeederPositionRad = Units.rotationsToRadians(FeederPosition.getValueAsDouble());
     inputs.FeederVelocityRadPerSec = Units.rotationsToRadians(FeederVelocity.getValueAsDouble());
     inputs.FeederAppliedVolts = FeederAppliedVolts.getValueAsDouble();
     inputs.FeederCurrentAmps = FeederCurrent.getValueAsDouble();
+    inputs.FeederSupplyCurrentAmps = FeederSupplyCurrent.getValueAsDouble();
   }
 
   @Override

@@ -10,6 +10,7 @@ public interface HoodIO {
     public double motorVelocityRotPerSec = 0.0;
     public double motorAppliedVolts = 0.0;
     public double motorCurrentAmps = 0.0;
+    public double motorSupplyCurrentAmps = 0.0;
 
     public double hoodPositionDeg = 0.0;
   }

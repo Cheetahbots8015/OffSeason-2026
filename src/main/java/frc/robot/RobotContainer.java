@@ -27,7 +27,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.HoodCommands.HoodNeutral;
-import frc.robot.commands.HoodCommands.HoodPositionCommand;
 import frc.robot.commands.IntakeCommands.IntakeArmCommand;
 import frc.robot.commands.IntakeCommands.IntakeAutoCommand;
 import frc.robot.commands.IntakeCommands.IntakeCommand;

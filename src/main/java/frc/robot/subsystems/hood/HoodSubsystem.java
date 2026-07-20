@@ -4,6 +4,7 @@ import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.energy.FinanceDepartment;
 import org.littletonrobotics.junction.Logger;
 
 public class HoodSubsystem extends SubsystemBase {
@@ -28,6 +29,10 @@ public class HoodSubsystem extends SubsystemBase {
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Hood", inputs);
+
+    // Report energy usage (supply current = battery draw)
+    FinanceDepartment.getInstance()
+        .reportCurrentUsage("Hood", false, inputs.motorSupplyCurrentAmps);
   }
 
   public void setMotorVoltage(double volts) {

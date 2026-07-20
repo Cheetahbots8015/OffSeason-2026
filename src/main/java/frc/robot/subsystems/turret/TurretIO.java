@@ -10,6 +10,7 @@ public interface TurretIO {
     public double motorVelocityRotPerSec = 0.0;
     public double motorAppliedVolts = 0.0;
     public double motorCurrentAmps = 0.0;
+    public double motorSupplyCurrentAmps = 0.0;
 
     public double turretPositionDeg = 0.0;
 

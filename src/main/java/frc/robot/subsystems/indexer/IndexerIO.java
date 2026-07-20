@@ -9,10 +9,12 @@ public interface IndexerIO {
     public double horizontalVelocityRadPerSec = 0.0;
     public double horizontalAppliedVolts = 0.0;
     public double horizontalCurrentAmps = 0.0;
+    public double horizontalSupplyCurrentAmps = 0.0;
     public double verticlePositionRad = 0.0;
     public double verticleVelocityRadPerSec = 0.0;
     public double verticleAppliedVolts = 0.0;
     public double verticleCurrentAmps = 0.0;
+    public double verticleSupplyCurrentAmps = 0.0;
   }
 
   /** Updates the set of loggable inputs. */

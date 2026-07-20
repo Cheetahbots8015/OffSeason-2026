@@ -25,11 +25,13 @@ public class IndexerOTalonFX implements IndexerIO {
   private final StatusSignal<AngularVelocity> horizontalVelocity;
   private final StatusSignal<Voltage> horizontalAppliedVolts;
   private final StatusSignal<Current> horizontalCurrent;
+  private final StatusSignal<Current> horizontalSupplyCurrent;
 
   private final StatusSignal<Angle> verticlePosition;
   private final StatusSignal<AngularVelocity> verticleVelocity;
   private final StatusSignal<Voltage> verticleAppliedVolts;
   private final StatusSignal<Current> verticleCurrent;
+  private final StatusSignal<Current> verticleSupplyCurrent;
 
   public IndexerOTalonFX() {
     horizontal = new TalonFX(IndexerConstants.kHoriMotorID, "");
@@ -69,10 +71,12 @@ public class IndexerOTalonFX implements IndexerIO {
     horizontalVelocity = horizontal.getVelocity();
     horizontalAppliedVolts = horizontal.getMotorVoltage();
     horizontalCurrent = horizontal.getTorqueCurrent();
+    horizontalSupplyCurrent = horizontal.getSupplyCurrent();
     verticlePosition = verticle.getPosition();
     verticleVelocity = verticle.getVelocity();
     verticleAppliedVolts = verticle.getMotorVoltage();
     verticleCurrent = verticle.getTorqueCurrent();
+    verticleSupplyCurrent = verticle.getSupplyCurrent();
 
     // Optimize CAN bus usage
     BaseStatusSignal.setUpdateFrequencyForAll(
@@ -81,10 +85,12 @@ public class IndexerOTalonFX implements IndexerIO {
         horizontalVelocity,
         horizontalAppliedVolts,
         horizontalCurrent,
+        horizontalSupplyCurrent,
         verticlePosition,
         verticleVelocity,
         verticleAppliedVolts,
-        verticleCurrent);
+        verticleCurrent,
+        verticleSupplyCurrent);
 
     ParentDevice.optimizeBusUtilizationForAll(horizontal, verticle);
   }
@@ -96,21 +102,25 @@ public class IndexerOTalonFX implements IndexerIO {
         horizontalVelocity,
         horizontalAppliedVolts,
         horizontalCurrent,
+        horizontalSupplyCurrent,
         verticlePosition,
         verticleVelocity,
         verticleAppliedVolts,
-        verticleCurrent);
+        verticleCurrent,
+        verticleSupplyCurrent);
 
     inputs.horizontalPositionRad = Units.rotationsToRadians(horizontalPosition.getValueAsDouble());
     inputs.horizontalVelocityRadPerSec =
         Units.rotationsToRadians(horizontalVelocity.getValueAsDouble());
     inputs.horizontalAppliedVolts = horizontalAppliedVolts.getValueAsDouble();
     inputs.horizontalCurrentAmps = horizontalCurrent.getValueAsDouble();
+    inputs.horizontalSupplyCurrentAmps = horizontalSupplyCurrent.getValueAsDouble();
     inputs.verticlePositionRad = Units.rotationsToRadians(verticlePosition.getValueAsDouble());
     inputs.verticleVelocityRadPerSec =
         Units.rotationsToRadians(verticleVelocity.getValueAsDouble());
     inputs.verticleAppliedVolts = verticleAppliedVolts.getValueAsDouble();
     inputs.verticleCurrentAmps = verticleCurrent.getValueAsDouble();
+    inputs.verticleSupplyCurrentAmps = verticleSupplyCurrent.getValueAsDouble();
   }
 
   @Override

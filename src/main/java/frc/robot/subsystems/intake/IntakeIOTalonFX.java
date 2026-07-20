@@ -32,16 +32,19 @@ public class IntakeIOTalonFX implements IntakeIO {
   private final StatusSignal<AngularVelocity> FlywheelVelocity;
   private final StatusSignal<Voltage> FlywheelAppliedVolts;
   private final StatusSignal<Current> FlywheelCurrent;
+  private final StatusSignal<Current> FlywheelSupplyCurrent;
 
   private final StatusSignal<Angle> FollowerPosition;
   private final StatusSignal<AngularVelocity> FollowerVelocity;
   private final StatusSignal<Voltage> FollowerAppliedVolts;
   private final StatusSignal<Current> FollowerCurrent;
+  private final StatusSignal<Current> FollowerSupplyCurrent;
 
   private final StatusSignal<Angle> ArmPosition;
   private final StatusSignal<AngularVelocity> ArmVelocity;
   private final StatusSignal<Voltage> ArmAppliedVolts;
   private final StatusSignal<Current> ArmCurrent;
+  private final StatusSignal<Current> ArmSupplyCurrent;
 
   public IntakeIOTalonFX() {
     flywheel = new TalonFX(IntakeConstants.flywheelID, "");
@@ -110,25 +113,30 @@ public class IntakeIOTalonFX implements IntakeIO {
     FlywheelVelocity = flywheel.getVelocity();
     FlywheelAppliedVolts = flywheel.getMotorVoltage();
     FlywheelCurrent = flywheel.getTorqueCurrent();
+    FlywheelSupplyCurrent = flywheel.getSupplyCurrent();
 
     FollowerPosition = follower.getPosition();
     FollowerVelocity = follower.getVelocity();
     FollowerAppliedVolts = follower.getMotorVoltage();
     FollowerCurrent = follower.getTorqueCurrent();
+    FollowerSupplyCurrent = follower.getSupplyCurrent();
 
     ArmPosition = arm.getPosition();
     ArmVelocity = arm.getVelocity();
     ArmAppliedVolts = arm.getMotorVoltage();
     ArmCurrent = arm.getTorqueCurrent();
+    ArmSupplyCurrent = arm.getSupplyCurrent();
 
     BaseStatusSignal.setUpdateFrequencyForAll(
         IntakeConstants.statusrRegularUpdateFrequency,
         FlywheelAppliedVolts,
         FlywheelCurrent,
+        FlywheelSupplyCurrent,
         FlywheelPosition,
         FlywheelVelocity,
         FollowerAppliedVolts,
         FollowerCurrent,
+        FollowerSupplyCurrent,
         FollowerPosition,
         FollowerVelocity);
     BaseStatusSignal.setUpdateFrequencyForAll(
@@ -136,7 +144,8 @@ public class IntakeIOTalonFX implements IntakeIO {
         ArmPosition,
         ArmVelocity,
         ArmAppliedVolts,
-        ArmCurrent);
+        ArmCurrent,
+        ArmSupplyCurrent);
     ParentDevice.optimizeBusUtilizationForAll(flywheel, follower, arm);
   }
 
@@ -145,33 +154,39 @@ public class IntakeIOTalonFX implements IntakeIO {
     BaseStatusSignal.refreshAll(
         FlywheelAppliedVolts,
         FlywheelCurrent,
+        FlywheelSupplyCurrent,
         FlywheelPosition,
         FlywheelVelocity,
         FollowerAppliedVolts,
         FollowerCurrent,
+        FollowerSupplyCurrent,
         FollowerPosition,
         FollowerVelocity,
         ArmPosition,
         ArmVelocity,
         ArmAppliedVolts,
-        ArmCurrent);
+        ArmCurrent,
+        ArmSupplyCurrent);
     // Update motor inputs
     inputs.FlywheelPositionRad = Units.rotationsToRadians(FlywheelPosition.getValueAsDouble());
     inputs.FlywheelVelocityRadPerSec =
         Units.rotationsToRadians(FlywheelVelocity.getValueAsDouble());
     inputs.FlywheelAppliedVolts = FlywheelAppliedVolts.getValueAsDouble();
     inputs.FlywheelCurrentAmps = FlywheelCurrent.getValueAsDouble();
+    inputs.FlywheelSupplyCurrentAmps = FlywheelSupplyCurrent.getValueAsDouble();
 
     inputs.FollowerPositionRad = Units.rotationsToRadians(FollowerPosition.getValueAsDouble());
     inputs.FollowerVelocityRadPerSec =
         Units.rotationsToRadians(FollowerVelocity.getValueAsDouble());
     inputs.FollowerAppliedVolts = FollowerAppliedVolts.getValueAsDouble();
     inputs.FollowerCurrentAmps = FollowerCurrent.getValueAsDouble();
+    inputs.FollowerSupplyCurrentAmps = FollowerSupplyCurrent.getValueAsDouble();
 
     inputs.ArmPositionRad = Units.rotationsToRadians(ArmPosition.getValueAsDouble());
     inputs.ArmVelocityRadPerSec = Units.rotationsToRadians(ArmVelocity.getValueAsDouble());
     inputs.ArmAppliedVolts = ArmAppliedVolts.getValueAsDouble();
     inputs.ArmCurrentAmps = ArmCurrent.getValueAsDouble();
+    inputs.ArmSupplyCurrentAmps = ArmSupplyCurrent.getValueAsDouble();
   }
 
   @Override

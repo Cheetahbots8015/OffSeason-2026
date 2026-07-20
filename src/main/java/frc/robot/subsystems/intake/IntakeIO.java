@@ -9,16 +9,19 @@ public interface IntakeIO {
     public double FlywheelVelocityRadPerSec = 0.0;
     public double FlywheelAppliedVolts = 0.0;
     public double FlywheelCurrentAmps = 0.0;
+    public double FlywheelSupplyCurrentAmps = 0.0;
 
     public double FollowerPositionRad = 0.0;
     public double FollowerVelocityRadPerSec = 0.0;
     public double FollowerAppliedVolts = 0.0;
     public double FollowerCurrentAmps = 0.0;
+    public double FollowerSupplyCurrentAmps = 0.0;
 
     public double ArmPositionRad = 0.0;
     public double ArmVelocityRadPerSec = 0.0;
     public double ArmAppliedVolts = 0.0;
     public double ArmCurrentAmps = 0.0;
+    public double ArmSupplyCurrentAmps = 0.0;
   }
 
   public default void updateInputs(IntakeIOInputs inputs) {}

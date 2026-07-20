@@ -25,6 +25,7 @@ public class HoodIOTalonFX implements HoodIO {
   private final StatusSignal<AngularVelocity> motorVelocity;
   private final StatusSignal<Voltage> motorAppliedVolts;
   private final StatusSignal<Current> motorCurrent;
+  private final StatusSignal<Current> motorSupplyCurrent;
 
   private boolean hoodNeutral = false;
 
@@ -63,25 +64,29 @@ public class HoodIOTalonFX implements HoodIO {
     motorVelocity = motor.getVelocity();
     motorAppliedVolts = motor.getMotorVoltage();
     motorCurrent = motor.getTorqueCurrent();
+    motorSupplyCurrent = motor.getSupplyCurrent();
 
     BaseStatusSignal.setUpdateFrequencyForAll(
         HoodConstants.kStatusUpdateFrequency,
         motorPosition,
         motorVelocity,
         motorAppliedVolts,
-        motorCurrent);
+        motorCurrent,
+        motorSupplyCurrent);
 
     ParentDevice.optimizeBusUtilizationForAll(motor);
   }
 
   @Override
   public void updateInputs(HoodIOInputs inputs) {
-    BaseStatusSignal.refreshAll(motorPosition, motorVelocity, motorAppliedVolts, motorCurrent);
+    BaseStatusSignal.refreshAll(
+        motorPosition, motorVelocity, motorAppliedVolts, motorCurrent, motorSupplyCurrent);
 
     inputs.motorPosition = motorPosition.getValueAsDouble();
     inputs.motorVelocityRotPerSec = motorVelocity.getValueAsDouble();
     inputs.motorAppliedVolts = motorAppliedVolts.getValueAsDouble();
     inputs.motorCurrentAmps = motorCurrent.getValueAsDouble();
+    inputs.motorSupplyCurrentAmps = motorSupplyCurrent.getValueAsDouble();
 
     inputs.hoodPositionDeg = CheetahUtil.hoodRotationsToDeg(motorPosition.getValueAsDouble());
   }
@@ -94,10 +99,9 @@ public class HoodIOTalonFX implements HoodIO {
   @Override
   public void setPosition(double positionDeg) {
     // Talon expects rotations for position commands
-    if (!hoodNeutral){
+    if (!hoodNeutral) {
       motor.setControl(m_request.withPosition(CheetahUtil.hoodDegToRotations(positionDeg)));
-    }
-    else{
+    } else {
       motor.setVoltage(0);
     }
   }

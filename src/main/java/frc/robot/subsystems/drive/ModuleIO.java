@@ -24,6 +24,7 @@ public interface ModuleIO {
     public double driveVelocityRadPerSec = 0.0;
     public double driveAppliedVolts = 0.0;
     public double driveCurrentAmps = 0.0;
+    public double driveSupplyCurrentAmps = 0.0;
 
     public boolean turnConnected = false;
     public boolean turnEncoderConnected = false;
@@ -32,6 +33,7 @@ public interface ModuleIO {
     public double turnVelocityRadPerSec = 0.0;
     public double turnAppliedVolts = 0.0;
     public double turnCurrentAmps = 0.0;
+    public double turnSupplyCurrentAmps = 0.0;
 
     public double[] odometryTimestamps = new double[] {};
     public double[] odometryDrivePositionsRad = new double[] {};
@@ -52,4 +54,7 @@ public interface ModuleIO {
 
   /** Run the turn motor to the specified rotation. */
   public default void setTurnPosition(Rotation2d rotation) {}
+
+  /** Sets the drive motor's supply current limit in amps (dynamic energy budget). */
+  public default void setDriveSupplyCurrentLimit(double amps) {}
 }

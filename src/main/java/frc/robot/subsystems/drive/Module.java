@@ -22,6 +22,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import frc.robot.energy.FinanceDepartment;
 import org.littletonrobotics.junction.Logger;
 
 public class Module {
@@ -75,6 +76,23 @@ public class Module {
     driveDisconnectedAlert.set(!inputs.driveConnected);
     turnDisconnectedAlert.set(!inputs.turnConnected);
     turnEncoderDisconnectedAlert.set(!inputs.turnEncoderConnected);
+
+    // Report energy usage (supply current = battery draw)
+    FinanceDepartment.getInstance()
+        .reportCurrentUsage(
+            "Drive/Module" + Integer.toString(index) + "/Drive",
+            true,
+            inputs.driveConnected ? inputs.driveSupplyCurrentAmps : 0.0);
+    FinanceDepartment.getInstance()
+        .reportCurrentUsage(
+            "Drive/Module" + Integer.toString(index) + "/Turn",
+            false,
+            inputs.turnConnected ? inputs.turnSupplyCurrentAmps : 0.0);
+  }
+
+  /** Applies the dynamic drive supply current limit from the energy budget. */
+  public void applyEnergyLimit() {
+    io.setDriveSupplyCurrentLimit(FinanceDepartment.getInstance().getDriveLimit());
   }
 
   /** Runs the module with the specified setpoint state. Mutates the state to optimize it. */

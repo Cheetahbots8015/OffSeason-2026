@@ -18,10 +18,14 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants.DriveMotorArrangement;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.SteerMotorArrangement;
 import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.pathfinding.Pathfinding;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.constants.ContainerConstants;
+import frc.robot.energy.FinanceDepartment;
 import frc.robot.generated.TunerConstants;
+import frc.robot.util.FullSubsystem;
 import frc.robot.util.LocalADStarAK;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
@@ -39,6 +43,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 public class Robot extends LoggedRobot {
   private Command autonomousCommand;
   private RobotContainer robotContainer;
+  private final Timer disabledTimer = new Timer();
 
   public Robot() {
     // Record metadata
@@ -100,6 +105,10 @@ public class Robot extends LoggedRobot {
       }
     }
 
+    // Construct the energy manager before RobotContainer so its periodicAfterScheduler
+    // (budget update) runs before the drive's (current-limit application) each loop
+    FinanceDepartment.getInstance();
+
     // Instantiate our RobotContainer. This will perform all our button bindings,
     // and put our autonomous chooser on the dashboard.
     robotContainer = new RobotContainer();
@@ -119,6 +128,17 @@ public class Robot extends LoggedRobot {
     // the Command-based framework to work.
     CommandScheduler.getInstance().run();
 
+    // Run post-scheduler periodic methods (energy budgets, dynamic current limits)
+    FullSubsystem.runAllPeriodicAfterScheduler();
+
+    // Re-anchor the battery estimate after sitting disabled (e.g. battery swap)
+    if (DriverStation.isDisabled() && disabledTimer.hasElapsed(10.0)) {
+      FinanceDepartment.getInstance().reset();
+    }
+    if (DriverStation.isEnabled()) {
+      disabledTimer.restart();
+    }
+
     // Return to non-RT thread priority (do not modify the first argument)
     // Threads.setCurrentThreadPriority(false, 10);
   }
@@ -129,6 +149,10 @@ public class Robot extends LoggedRobot {
     PathfindingCommand.warmupCommand().schedule();
     LimelightHelpers.SetIMUMode("limelight-shooter", 1);
     LimelightHelpers.SetIMUMode("limelight-chassis", 1);
+
+    // Construct the energy manager before the first loop and anchor the battery estimate
+    disabledTimer.start();
+    FinanceDepartment.getInstance().reset();
   }
 
   /** This function is called once when the robot is disabled. */

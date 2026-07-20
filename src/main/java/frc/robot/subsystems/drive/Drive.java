@@ -49,7 +49,6 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.LimelightHelpers;
 import frc.robot.LimelightHelpers.PoseEstimate;
@@ -57,13 +56,14 @@ import frc.robot.constants.ContainerConstants;
 import frc.robot.constants.ContainerConstants.Mode;
 import frc.robot.constants.DriveConstants;
 import frc.robot.generated.TunerConstants;
+import frc.robot.util.FullSubsystem;
 import frc.robot.util.LocalADStarAK;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
-public class Drive extends SubsystemBase {
+public class Drive extends FullSubsystem {
   static final double ODOMETRY_FREQUENCY =
       new CANBus(TunerConstants.DrivetrainConstants.CANBusName).isNetworkFD() ? 250.0 : 100.0;
   public static final double DRIVE_BASE_RADIUS =
@@ -268,9 +268,7 @@ public class Drive extends SubsystemBase {
     for (var module : modules) {
       module.periodic();
     }
-    odometryLock.unlock();
-
-    // Stop moving when disabled
+    odometryLock.unlock(); // Stop moving when disabled
     if (DriverStation.isDisabled()) {
       for (var module : modules) {
         module.stop();
@@ -429,6 +427,14 @@ public class Drive extends SubsystemBase {
     field2d.setRobotPose(poseEstimator.getEstimatedPosition());
     SmartDashboard.putData("Field2d", field2d);
     gyroDisconnectedAlert.set(!gyroInputs.connected && ContainerConstants.currentMode != Mode.SIM);
+  }
+
+  @Override
+  public void periodicAfterScheduler() {
+    // Apply the dynamic drive current limit from the energy budget
+    for (var module : modules) {
+      module.applyEnergyLimit();
+    }
   }
 
   /**

@@ -26,6 +26,7 @@ public class TurretIOTalonFX implements TurretIO {
   private final StatusSignal<AngularVelocity> motorVelocity;
   private final StatusSignal<Voltage> motorAppliedVolts;
   private final StatusSignal<Current> motorCurrent;
+  private final StatusSignal<Current> motorSupplyCurrent;
   private boolean turretLocked;
 
   public TurretIOTalonFX() {
@@ -65,6 +66,7 @@ public class TurretIOTalonFX implements TurretIO {
     motorVelocity = motor.getVelocity();
     motorAppliedVolts = motor.getMotorVoltage();
     motorCurrent = motor.getTorqueCurrent();
+    motorSupplyCurrent = motor.getSupplyCurrent();
     turretLocked = false;
 
     BaseStatusSignal.setUpdateFrequencyForAll(
@@ -72,19 +74,22 @@ public class TurretIOTalonFX implements TurretIO {
         motorPosition,
         motorVelocity,
         motorAppliedVolts,
-        motorCurrent);
+        motorCurrent,
+        motorSupplyCurrent);
 
     ParentDevice.optimizeBusUtilizationForAll(motor);
   }
 
   @Override
   public void updateInputs(TurretIOInputs inputs) {
-    BaseStatusSignal.refreshAll(motorPosition, motorVelocity, motorAppliedVolts, motorCurrent);
+    BaseStatusSignal.refreshAll(
+        motorPosition, motorVelocity, motorAppliedVolts, motorCurrent, motorSupplyCurrent);
 
     inputs.motorPositionDeg = Units.rotationsToDegrees(motorPosition.getValueAsDouble());
     inputs.motorVelocityRotPerSec = motorVelocity.getValueAsDouble();
     inputs.motorAppliedVolts = motorAppliedVolts.getValueAsDouble();
     inputs.motorCurrentAmps = motorCurrent.getValueAsDouble();
+    inputs.motorSupplyCurrentAmps = motorSupplyCurrent.getValueAsDouble();
 
     inputs.turretPositionDeg = CheetahUtil.turretRotationsToDeg(motorPosition.getValueAsDouble());
 

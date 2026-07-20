@@ -3,6 +3,7 @@
 package frc.robot.subsystems.feeder;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.energy.FinanceDepartment;
 import frc.robot.subsystems.feeder.FeederIO.FeederIOInputs;
 import org.littletonrobotics.junction.Logger;
 
@@ -17,6 +18,10 @@ public class FeederSubsystem extends SubsystemBase {
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Feeder", inputs);
+
+    // Report energy usage (supply current = battery draw)
+    FinanceDepartment.getInstance()
+        .reportCurrentUsage("Feeder", false, inputs.FeederSupplyCurrentAmps);
   }
 
   public void stop() {

@@ -6,6 +6,7 @@ import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.energy.FinanceDepartment;
 import frc.robot.subsystems.intake.IntakeIO.IntakeIOInputs;
 import org.littletonrobotics.junction.Logger;
 
@@ -30,6 +31,16 @@ public class IntakeSubsystem extends SubsystemBase {
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Intake", inputs);
+
+    // Report energy usage (supply current = battery draw)
+    FinanceDepartment.getInstance()
+        .reportCurrentUsage(
+            "Intake/Flywheel",
+            false,
+            inputs.FlywheelSupplyCurrentAmps,
+            inputs.FollowerSupplyCurrentAmps);
+    FinanceDepartment.getInstance()
+        .reportCurrentUsage("Intake/Arm", false, inputs.ArmSupplyCurrentAmps);
   }
 
   public void setArmVoltage(double volts) {

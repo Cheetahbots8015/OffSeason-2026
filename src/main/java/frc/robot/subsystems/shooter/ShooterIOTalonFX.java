@@ -27,11 +27,13 @@ public class ShooterIOTalonFX implements ShooterIO {
   private final StatusSignal<AngularVelocity> leftVelocity;
   private final StatusSignal<Voltage> leftAppliedVolts;
   private final StatusSignal<Current> leftCurrent;
+  private final StatusSignal<Current> leftSupplyCurrent;
 
   private final StatusSignal<Angle> rightPosition;
   private final StatusSignal<AngularVelocity> rightVelocity;
   private final StatusSignal<Voltage> rightAppliedVolts;
   private final StatusSignal<Current> rightCurrent;
+  private final StatusSignal<Current> rightSupplyCurrent;
 
   public ShooterIOTalonFX() {
     left = new TalonFX(ShooterConstants.kLeftMotorID, "canivore");
@@ -71,10 +73,12 @@ public class ShooterIOTalonFX implements ShooterIO {
     leftVelocity = left.getVelocity();
     leftAppliedVolts = left.getMotorVoltage();
     leftCurrent = left.getTorqueCurrent();
+    leftSupplyCurrent = left.getSupplyCurrent();
     rightPosition = right.getPosition();
     rightVelocity = right.getVelocity();
     rightAppliedVolts = right.getMotorVoltage();
     rightCurrent = right.getTorqueCurrent();
+    rightSupplyCurrent = right.getSupplyCurrent();
 
     // Optimize CAN bus usage
     BaseStatusSignal.setUpdateFrequencyForAll(
@@ -83,10 +87,12 @@ public class ShooterIOTalonFX implements ShooterIO {
         leftVelocity,
         leftAppliedVolts,
         leftCurrent,
+        leftSupplyCurrent,
         rightPosition,
         rightVelocity,
         rightAppliedVolts,
-        rightCurrent);
+        rightCurrent,
+        rightSupplyCurrent);
 
     ParentDevice.optimizeBusUtilizationForAll(left, right);
   }
@@ -98,19 +104,23 @@ public class ShooterIOTalonFX implements ShooterIO {
         leftVelocity,
         leftAppliedVolts,
         leftCurrent,
+        leftSupplyCurrent,
         rightPosition,
         rightVelocity,
         rightAppliedVolts,
-        rightCurrent);
+        rightCurrent,
+        rightSupplyCurrent);
 
     inputs.leftPositionRad = Units.rotationsToRadians(leftPosition.getValueAsDouble());
     inputs.leftVelocityRadPerSec = Units.rotationsToRadians(leftVelocity.getValueAsDouble());
     inputs.leftAppliedVolts = leftAppliedVolts.getValueAsDouble();
     inputs.leftCurrentAmps = leftCurrent.getValueAsDouble();
+    inputs.leftSupplyCurrentAmps = leftSupplyCurrent.getValueAsDouble();
     inputs.rightPositionRad = Units.rotationsToRadians(rightPosition.getValueAsDouble());
     inputs.rightVelocityRadPerSec = Units.rotationsToRadians(rightVelocity.getValueAsDouble());
     inputs.rightAppliedVolts = rightAppliedVolts.getValueAsDouble();
     inputs.rightCurrentAmps = rightCurrent.getValueAsDouble();
+    inputs.rightSupplyCurrentAmps = rightSupplyCurrent.getValueAsDouble();
   }
 
   @Override
