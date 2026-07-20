@@ -12,7 +12,7 @@
         "y": 7.187001986111111
       },
       "isLocked": false,
-      "linkedName": "Startpoint 2"
+      "linkedName": null
     },
     {
       "anchor": {
@@ -47,8 +47,8 @@
   "reversed": false,
   "folder": null,
   "idealStartingState": {
-    "velocity": 0,
-    "rotation": 0.0
+    "velocity": 0.0,
+    "rotation": -90.0
   },
   "useDefaultConstraints": false
 }
