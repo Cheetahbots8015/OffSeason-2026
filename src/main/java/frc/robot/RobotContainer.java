@@ -31,6 +31,7 @@ import frc.robot.commands.IntakeCommands.IntakeArmCommand;
 import frc.robot.commands.IntakeCommands.IntakeAutoCommand;
 import frc.robot.commands.IntakeCommands.IntakeCommand;
 import frc.robot.commands.IntakeCommands.IntakeDriveCommand;
+import frc.robot.commands.IntakeCommands.IntakeResetCommand;
 import frc.robot.commands.IntakeCommands.IntakeSHMCommand;
 import frc.robot.commands.OutakeCommand;
 import frc.robot.commands.ShooterCommands.ShootFarOnMoveTriggerCommand;
@@ -286,6 +287,7 @@ public class RobotContainer {
     controller.x().whileTrue(new OutakeCommand(indexer, feeder));
     controller.rightBumper().whileTrue(new IntakeDriveCommand(intake, 2));
     controller.leftBumper().whileTrue(new IntakeArmCommand(intake, -75));
+    subController.y().whileTrue(new IntakeResetCommand(intake));
   }
 
   /**

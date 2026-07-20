@@ -204,4 +204,9 @@ public class IntakeIOTalonFX implements IntakeIO {
   public void setArmPosition(double radians) {
     arm.setControl(m_armRequest.withPosition(Units.radiansToRotations(radians)));
   }
+
+  @Override
+  public void resetArm() {
+    arm.setPosition(0);
+  }
 }
