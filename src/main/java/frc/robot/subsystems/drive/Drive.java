@@ -246,8 +246,10 @@ public class Drive extends FullSubsystem {
           allowed = true;
         }
       }
-      if (allowed) {
-        StdDev += i.distToCamera * i.ambiguity * 0.5;
+      if (allowed && i.id == 9 || i.id == 10 || i.id == 25 || i.id == 26) {
+        StdDev += i.distToCamera * i.ambiguity * 0.3;
+      } else if (allowed) {
+        StdDev += i.distToCamera * i.ambiguity;
       }
     }
     StdDev /= mt2.tagCount;
@@ -374,11 +376,11 @@ public class Drive extends FullSubsystem {
           poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(StdDev, StdDev, 9999999));
           poseEstimator.addVisionMeasurement(mt2_left.pose, mt2_left.timestampSeconds);
         }
-        Logger.recordOutput("LL/Left/pose", mt2_left.pose);
-        Logger.recordOutput("LL/Left/timestamp", mt2_left.timestampSeconds);
-        Logger.recordOutput("LL/Left/avgdist", mt2_left.avgTagDist);
-        Logger.recordOutput("LL/Left/latency", mt2_left.latency);
       }
+      Logger.recordOutput("LL/Left/pose", mt2_left.pose);
+      Logger.recordOutput("LL/Left/timestamp", mt2_left.timestampSeconds);
+      Logger.recordOutput("LL/Left/avgdist", mt2_left.avgTagDist);
+      Logger.recordOutput("LL/Left/latency", mt2_left.latency);
     } catch (Exception e) {
 
     }

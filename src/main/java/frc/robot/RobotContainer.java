@@ -208,14 +208,8 @@ public class RobotContainer {
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
-            () ->
-                -controller.getLeftY() > 0
-                    ? Math.pow(controller.getLeftY(), 2)
-                    : -Math.pow(controller.getLeftY(), 2),
-            () ->
-                -controller.getLeftX() > 0
-                    ? Math.pow(controller.getLeftX(), 2)
-                    : -Math.pow(controller.getLeftX(), 2),
+            () -> -controller.getLeftY(),
+            () -> -controller.getLeftX(),
             () ->
                 -controller.getRightX() > 0
                     ? Math.pow(controller.getRightX(), 2)
@@ -287,14 +281,8 @@ public class RobotContainer {
         .whileTrue(
             DriveCommands.joystickDrive(
                 drive,
-                () ->
-                    -controller.getLeftY() > 0
-                        ? Math.pow(controller.getLeftY(), 2) * 0.5
-                        : -Math.pow(controller.getLeftY(), 2) * 0.5,
-                () ->
-                    -controller.getLeftX() > 0
-                        ? Math.pow(controller.getLeftX(), 2) * 0.5
-                        : -Math.pow(controller.getLeftX(), 2) * 0.5,
+                () -> -controller.getLeftY() * 0.5,
+                () -> -controller.getLeftX() * 0.5,
                 () -> -controller.getRightX() * 0.2));
     controller
         .rightTrigger()

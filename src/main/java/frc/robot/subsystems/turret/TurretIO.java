@@ -13,6 +13,8 @@ public interface TurretIO {
     public double motorSupplyCurrentAmps = 0.0;
 
     public double turretPositionDeg = 0.0;
+    public double pigeonYawDeg = 0.0;
+    public double calculatedRobotDeg = 0.0;
 
     public boolean turretLocked = false;
   }
