@@ -39,8 +39,12 @@ public class ShootOnMoveTriggerCommand extends ShootOnMoveAimCommand {
     ShotParameters params = result.parameters();
 
     double shooterSetpointRadPerSec = getFlywheelSpeedRps(params) * 2.0 * Math.PI;
-    shooter.VelocityVoltage(
-        shooterSetpointRadPerSec + SmartDashboard.getNumber("shooterOffset", 0));
+    if (turret.getIo().turretLocked) {
+      shooter.VelocityVoltage(250);
+    } else {
+      shooter.VelocityVoltage(
+          shooterSetpointRadPerSec + SmartDashboard.getNumber("shooterOffset", 0));
+    }
     hood.setPosition(getHoodPositionDeg());
 
     if (CheetahUtil.isNear(turret.getPosition(), turretSetpoint, 10)

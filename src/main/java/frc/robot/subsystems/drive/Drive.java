@@ -264,13 +264,6 @@ public class Drive extends FullSubsystem {
    * factor, then clamp to a small floor so even perfect fixes don't get infinite trust. Theta is
    * never taken from vision (see VisionConstants.thetaStdDev).
    *
-   * <p>Reference starting point from the investigation doc (MT2 needs a bit more trust than 6328's
-   * 0.01 coefficient, which was tuned for their own solver):
-   *
-   * <pre>
-   * stddev = max(floor, baseline * avgTagDist^2 / tagCount^2 * cameraStdDevFactor)
-   * </pre>
-   *
    * <p>Trade-off to tune on the field: a lower baseline/floor re-converges faster after a collision
    * but jitters more when tags are marginal.
    */

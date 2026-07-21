@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.302,
-        "y": 7.306
+        "x": 3.497,
+        "y": 4.035
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.7374404761904771,
-        "y": 7.706190476190477
+        "x": 3.247,
+        "y": 4.035
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 1.6,
-        "y": 5.926374407582938
+        "x": 3.0,
+        "y": 4.035
       },
       "prevControl": {
-        "x": 2.627041772202981,
-        "y": 6.458881656620418
+        "x": 3.25,
+        "y": 4.035
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Depot"
+      "linkedName": null
     }
   ],
   "rotationTargets": [],
@@ -47,7 +47,7 @@
   "reversed": false,
   "folder": null,
   "idealStartingState": {
-    "velocity": 0.0,
+    "velocity": 0,
     "rotation": 180.0
   },
   "useDefaultConstraints": false

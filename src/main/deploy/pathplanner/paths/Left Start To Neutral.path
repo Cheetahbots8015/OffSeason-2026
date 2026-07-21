@@ -12,7 +12,7 @@
         "y": 7.306
       },
       "isLocked": false,
-      "linkedName": "Startpoint 2"
+      "linkedName": null
     },
     {
       "anchor": {
@@ -28,7 +28,12 @@
       "linkedName": "Left Neutral"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.23027718550106924,
+      "rotationDegrees": 180.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -47,8 +52,8 @@
   "reversed": false,
   "folder": null,
   "idealStartingState": {
-    "velocity": 0,
-    "rotation": -90.0
+    "velocity": 0.0,
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }
