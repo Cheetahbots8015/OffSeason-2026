@@ -38,7 +38,7 @@ public class ShootPassCommand extends Command {
   public final void execute() {
     AimResult result = computeAim();
     turret.setPosition(result.turretSetpointDeg());
-    shooter.VelocityVoltage(200);
+    shooter.VelocityVoltage(300);
     indexer.VelocityVoltage(
         SmartDashboard.getNumber("indexerHorizontalVelocity", 0),
         SmartDashboard.getNumber("indexerVerticleVelocity", 0));

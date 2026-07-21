@@ -34,7 +34,7 @@ public class TurretIOTalonFX implements TurretIO {
 
   public TurretIOTalonFX() {
     motor = new TalonFX(TurretConstants.kTurretMotorID, "");
-    pigeon = new Pigeon2(TurretConstants.kPigeonId, "");
+    pigeon = new Pigeon2(TurretConstants.kPigeonId, "canivore");
 
     motorConfigs.MotorOutput.withNeutralMode(
         TurretConstants.kMotorNeutralCoast ? NeutralModeValue.Coast : NeutralModeValue.Brake);
@@ -82,8 +82,8 @@ public class TurretIOTalonFX implements TurretIO {
         motorVelocity,
         motorAppliedVolts,
         motorCurrent,
-        motorSupplyCurrent,
-        pigeonYaw);
+        motorSupplyCurrent);
+    BaseStatusSignal.setUpdateFrequencyForAll(TurretConstants.kStatusUpdateFrequency, pigeonYaw);
 
     ParentDevice.optimizeBusUtilizationForAll(motor, pigeon);
   }
@@ -91,12 +91,8 @@ public class TurretIOTalonFX implements TurretIO {
   @Override
   public void updateInputs(TurretIOInputs inputs) {
     BaseStatusSignal.refreshAll(
-        motorPosition,
-        motorVelocity,
-        motorAppliedVolts,
-        motorCurrent,
-        motorSupplyCurrent,
-        pigeonYaw);
+        motorPosition, motorVelocity, motorAppliedVolts, motorCurrent, motorSupplyCurrent);
+    BaseStatusSignal.refreshAll(pigeonYaw);
 
     inputs.motorPositionDeg = Units.rotationsToDegrees(motorPosition.getValueAsDouble());
     inputs.motorVelocityRotPerSec = motorVelocity.getValueAsDouble();

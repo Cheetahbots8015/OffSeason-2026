@@ -246,16 +246,15 @@ public class Drive extends FullSubsystem {
           allowed = true;
         }
       }
-      if (allowed && i.id == 9 || i.id == 10 || i.id == 25 || i.id == 26) {
-        StdDev += i.distToCamera * i.ambiguity * 0.3;
-      } else if (allowed) {
-        StdDev += i.distToCamera * i.ambiguity;
+      if (allowed) {
+        StdDev += i.distToCamera * i.distToCamera * 0.08;
       }
     }
-    StdDev /= mt2.tagCount;
-    if (StdDev < 0.5) {
-      StdDev = 0.5;
-    } else if (StdDev > 6) {
+    StdDev /= (mt2.tagCount * mt2.tagCount);
+    StdDev += 0.03;
+    if (StdDev < 0.05) {
+      StdDev = 0.05;
+    } else if (StdDev > 2) {
       StdDev = 999999;
     }
     return StdDev;
@@ -329,6 +328,7 @@ public class Drive extends FullSubsystem {
           0,
           0);
       doRejectUpdate = false;
+      Logger.recordOutput("LL/Swerve/connected", true);
       LimelightHelpers.SetFiducialIDFiltersOverride("limelight-swerve", validateID);
       LimelightHelpers.PoseEstimate mt2_swerve =
           LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-swerve");
@@ -337,10 +337,11 @@ public class Drive extends FullSubsystem {
       } else {
         doRejectUpdate = shouldReject(mt2_swerve, validateID);
       }
+      double StdDev = 999999;
       if (!doRejectUpdate && SmartDashboard.getBoolean("swerveLimelightEnable", true)) {
-        double StdDev = calculateStdDevs(mt2_swerve, validateID);
-        if (StdDev != 9999999) {
-          poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(StdDev, StdDev, 9999999));
+        StdDev = calculateStdDevs(mt2_swerve, validateID);
+        if (StdDev != 999999) {
+          poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(StdDev, StdDev, 999999));
           poseEstimator.addVisionMeasurement(mt2_swerve.pose, mt2_swerve.timestampSeconds);
         }
       }
@@ -348,8 +349,9 @@ public class Drive extends FullSubsystem {
       Logger.recordOutput("LL/Swerve/timestamp", mt2_swerve.timestampSeconds);
       Logger.recordOutput("LL/Swerve/avgdist", mt2_swerve.avgTagDist);
       Logger.recordOutput("LL/Swerve/latency", mt2_swerve.latency);
+      Logger.recordOutput("LL/Swerve/StdDev", StdDev);
     } catch (Exception e) {
-
+      Logger.recordOutput("LL/Swerve/connected", false);
     }
     try {
       LimelightHelpers.SetRobotOrientation(
@@ -370,10 +372,11 @@ public class Drive extends FullSubsystem {
       } else {
         doRejectUpdate = shouldReject(mt2_left, validateID);
       }
+      double StdDev = 999999;
       if (!doRejectUpdate && SmartDashboard.getBoolean("leftLimelightEnable", true)) {
-        double StdDev = calculateStdDevs(mt2_left, validateID);
-        if (StdDev != 9999999) {
-          poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(StdDev, StdDev, 9999999));
+        StdDev = calculateStdDevs(mt2_left, validateID);
+        if (StdDev != 999999) {
+          poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(StdDev, StdDev, 999999));
           poseEstimator.addVisionMeasurement(mt2_left.pose, mt2_left.timestampSeconds);
         }
       }
@@ -381,8 +384,9 @@ public class Drive extends FullSubsystem {
       Logger.recordOutput("LL/Left/timestamp", mt2_left.timestampSeconds);
       Logger.recordOutput("LL/Left/avgdist", mt2_left.avgTagDist);
       Logger.recordOutput("LL/Left/latency", mt2_left.latency);
+      Logger.recordOutput("LL/Left/StdDev", StdDev);
     } catch (Exception e) {
-
+      Logger.recordOutput("LL/Left/connected", false);
     }
     try {
       LimelightHelpers.SetRobotOrientation(
@@ -394,6 +398,7 @@ public class Drive extends FullSubsystem {
           0,
           0);
       doRejectUpdate = false;
+      Logger.recordOutput("LL/Rear/connected", true);
       LimelightHelpers.SetFiducialIDFiltersOverride("limelight-rear", validateID);
       LimelightHelpers.PoseEstimate mt2_rear =
           LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-rear");
@@ -402,10 +407,11 @@ public class Drive extends FullSubsystem {
       } else {
         doRejectUpdate = shouldReject(mt2_rear, validateID);
       }
+      double StdDev = 999999;
       if (!doRejectUpdate && SmartDashboard.getBoolean("rearLimelightEnable", true)) {
-        double StdDev = calculateStdDevs(mt2_rear, validateID);
-        if (StdDev != 9999999) {
-          poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(StdDev, StdDev, 9999999));
+        StdDev = calculateStdDevs(mt2_rear, validateID);
+        if (StdDev != 999999) {
+          poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(StdDev, StdDev, 999999));
           poseEstimator.addVisionMeasurement(mt2_rear.pose, mt2_rear.timestampSeconds);
         }
       }
@@ -413,8 +419,9 @@ public class Drive extends FullSubsystem {
       Logger.recordOutput("LL/Rear/timestamp", mt2_rear.timestampSeconds);
       Logger.recordOutput("LL/Rear/avgdist", mt2_rear.avgTagDist);
       Logger.recordOutput("LL/Rear/latency", mt2_rear.latency);
+      Logger.recordOutput("LL/Rear/StdDev", StdDev);
     } catch (Exception e) {
-
+      Logger.recordOutput("LL/Rear/connected", true);
     }
 
     SmartDashboard.putNumberArray(

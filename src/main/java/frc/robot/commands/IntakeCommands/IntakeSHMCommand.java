@@ -19,7 +19,7 @@ public class IntakeSHMCommand extends Command {
   @Override
   public void execute() {
     m_subsystem.setFlywheelVoltage(3);
-    if (CheetahUtil.isNear(m_subsystem.getInput().ArmPositionRad, -60, 5)) {
+    if (CheetahUtil.isNear(m_subsystem.getInput().ArmPositionRad, -50, 12.5)) {
       m_subsystem.setArmPosition(-75);
     } else {
       m_subsystem.setArmPosition(-50);

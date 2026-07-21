@@ -66,4 +66,8 @@ public class TurretSubsystem extends SubsystemBase {
   public double getPosition() {
     return inputs.turretPositionDeg;
   }
+
+  public TurretIOInputsAutoLogged getIo() {
+    return inputs;
+  }
 }
