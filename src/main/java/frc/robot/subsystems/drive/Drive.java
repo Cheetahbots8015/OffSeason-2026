@@ -40,6 +40,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.Alert;
@@ -55,6 +56,8 @@ import frc.robot.LimelightHelpers.PoseEstimate;
 import frc.robot.constants.ContainerConstants;
 import frc.robot.constants.ContainerConstants.Mode;
 import frc.robot.constants.DriveConstants;
+import frc.robot.constants.VisionConstants;
+import frc.robot.constants.VisionConstants.CameraConfig;
 import frc.robot.generated.TunerConstants;
 import frc.robot.util.FullSubsystem;
 import frc.robot.util.LocalADStarAK;
@@ -100,6 +103,11 @@ public class Drive extends FullSubsystem {
 
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
   private Rotation2d rawGyroRotation = new Rotation2d();
+  // Offset between the Pigeon's yaw and the robot's true heading. A Pigeon reboot
+  // re-zeros yaw; the offset re-anchors it to the heading we coasted to via module twists.
+  private Rotation2d gyroOffset = new Rotation2d();
+  private boolean wasGyroConnected = true;
+  private int gyroRebootCount = 0;
   private SwerveModulePosition[] lastModulePositions = // For delta tracking
       new SwerveModulePosition[] {
         new SwerveModulePosition(),
@@ -109,8 +117,6 @@ public class Drive extends FullSubsystem {
       };
   private SwerveDrivePoseEstimator poseEstimator =
       new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, new Pose2d());
-  private boolean doRejectUpdate;
-  private boolean doRejectUpdater;
 
   private ChassisSpeeds preSpeeds;
   private RobotConfig robotconfig;
@@ -208,55 +214,115 @@ public class Drive extends FullSubsystem {
     field2d = new Field2d();
   }
 
-  private boolean shouldReject(PoseEstimate mt2, int[] validateID) {
-    // ambiguity check
+  /**
+   * Returns a short rejection reason for a MegaTag2 frame, or null if the frame should be fused.
+   * Logged per camera so field debugging can distinguish "camera blind" from "code rejecting".
+   */
+  private String visionRejectionReason(PoseEstimate mt2, int[] validateID) {
     if (mt2.tagCount == 0) {
-      return false;
-    } else if (mt2.tagCount == 1 && mt2.rawFiducials.length == 1) {
-      if (mt2.rawFiducials[0].ambiguity > 0.5) {
-        return true;
+      return "NoTags";
+    }
+    // While the gyro is down the heading seed is twist-integrated, not measured —
+    // only accept multi-tag frames, whose heading is constrained by the tags themselves.
+    if (!gyroInputs.connected && mt2.tagCount == 1) {
+      return "GyroDisconnected";
+    }
+    // MT2's yaw seed lags one frame; frames captured while spinning fast are the worst
+    // (and are exactly the post-collision frames). Odometry is reliable here, so reject.
+    if (Math.abs(gyroInputs.yawVelocityRadPerSec) > VisionConstants.maxGyroRateRadPerSec) {
+      return "GyroRate";
+    }
+    if (mt2.tagCount == 1 && mt2.rawFiducials.length == 1) {
+      if (mt2.rawFiducials[0].ambiguity > VisionConstants.maxAmbiguity) {
+        return "Ambiguity";
       }
-      // check distance
-      if (mt2.rawFiducials[0].distToCamera > 4.0) {
-        return true;
+      if (mt2.rawFiducials[0].distToCamera > VisionConstants.maxSingleTagDistMeters) {
+        return "Distance";
       }
-      // check if allowed
-      else {
-        boolean allowed = false;
-        for (int i : validateID) {
-          if (mt2.rawFiducials[0].id == i) {
-            allowed = true;
-          }
+      boolean allowed = false;
+      for (int id : validateID) {
+        if (mt2.rawFiducials[0].id == id) {
+          allowed = true;
+          break;
         }
-        return !allowed;
       }
+      if (!allowed) {
+        return "InvalidID";
+      }
+    } else if (mt2.avgTagDist > VisionConstants.maxMultiTagDistMeters) {
+      return "Distance";
     }
-    // if multiple tags
-    else {
-      return mt2.avgTagDist > 4.0;
-    }
+    return null;
   }
 
-  private double calculateStdDevs(PoseEstimate mt2, int[] validateID) {
-    double StdDev = 0.0;
-    for (var i : mt2.rawFiducials) {
-      boolean allowed = false;
-      for (int j : validateID) {
-        if (i.id == j) {
-          allowed = true;
+  /**
+   * Computes the XY stddev (meters) for an accepted MT2 frame — how much the pose estimator trusts
+   * this measurement. Lower = trusted more = pose snaps toward vision faster.
+   *
+   * <p>Model: scale with the square of average tag distance (uncertainty grows fast with range) and
+   * shrink with the square of tag count (multi-tag fixes are much better). Apply the per-camera
+   * factor, then clamp to a small floor so even perfect fixes don't get infinite trust. Theta is
+   * never taken from vision (see VisionConstants.thetaStdDev).
+   *
+   * <p>Reference starting point from the investigation doc (MT2 needs a bit more trust than 6328's
+   * 0.01 coefficient, which was tuned for their own solver):
+   *
+   * <pre>
+   * stddev = max(floor, baseline * avgTagDist^2 / tagCount^2 * cameraStdDevFactor)
+   * </pre>
+   *
+   * <p>Trade-off to tune on the field: a lower baseline/floor re-converges faster after a collision
+   * but jitters more when tags are marginal.
+   */
+  private double calculateVisionStdDev(PoseEstimate mt2, CameraConfig camera) {
+    double distSq = mt2.avgTagDist * mt2.avgTagDist;
+    double tagSq = mt2.tagCount * mt2.tagCount;
+    double stdDev = VisionConstants.xyStdDevBaseline * distSq / tagSq * camera.stdDevFactor();
+    return Math.max(VisionConstants.xyStdDevFloor, stdDev);
+  }
+
+  private void processCamera(CameraConfig camera, int[] validateID) {
+    String logKey = "LL/" + camera.name().replace("limelight-", "");
+    String rejection;
+    try {
+      // Seed MT2 with the offset-corrected gyro heading + raw yaw rate. rawGyroRotation
+      // stays valid through gyro reboots (offset re-anchoring + twist coasting), unlike
+      // the raw gyro yaw which re-zeros. MT2 uses the rate to interpolate yaw at frame
+      // capture time.
+      LimelightHelpers.SetRobotOrientation(
+          camera.name(),
+          rawGyroRotation.getDegrees(),
+          Units.radiansToDegrees(gyroInputs.yawVelocityRadPerSec),
+          0,
+          0,
+          0,
+          0);
+      LimelightHelpers.SetFiducialIDFiltersOverride(camera.name(), validateID);
+      PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(camera.name());
+
+      if (mt2 == null) {
+        rejection = "NoEstimate";
+      } else {
+        rejection = visionRejectionReason(mt2, validateID);
+        if (rejection == null) {
+          double xyStdDev = calculateVisionStdDev(mt2, camera);
+          poseEstimator.addVisionMeasurement(
+              mt2.pose,
+              mt2.timestampSeconds,
+              VecBuilder.fill(xyStdDev, xyStdDev, VisionConstants.thetaStdDev));
+          Logger.recordOutput(logKey + "/stddev", xyStdDev);
         }
+        Logger.recordOutput(logKey + "/pose", mt2.pose);
+        Logger.recordOutput(logKey + "/timestamp", mt2.timestampSeconds);
+        Logger.recordOutput(logKey + "/avgdist", mt2.avgTagDist);
+        Logger.recordOutput(logKey + "/latency", mt2.latency);
+        Logger.recordOutput(logKey + "/tagCount", mt2.tagCount);
       }
-      if (allowed) {
-        StdDev += i.distToCamera * i.ambiguity;
-      }
+    } catch (Exception e) {
+      rejection = "Exception";
+      Logger.recordOutput(logKey + "/error", e.toString());
     }
-    StdDev /= mt2.tagCount;
-    if (StdDev < 0.5) {
-      StdDev = 0.5;
-    } else if (StdDev > 5) {
-      StdDev = 999999;
-    }
-    return StdDev;
+    Logger.recordOutput(logKey + "/rejection", rejection == null ? "None" : rejection);
   }
 
   @Override
@@ -281,6 +347,16 @@ public class Drive extends FullSubsystem {
       Logger.recordOutput("SwerveStates/SetpointsOptimized", new SwerveModuleState[] {});
     }
 
+    // Gyro reconnect (e.g. after a power cycle): the Pigeon re-zeros yaw on boot,
+    // so re-anchor the offset to the heading we coasted to via module twists.
+    if (gyroInputs.connected && !wasGyroConnected) {
+      gyroOffset = rawGyroRotation.minus(gyroInputs.yawPosition);
+      gyroRebootCount++;
+      Logger.recordOutput("Drive/Gyro/RebootOffsetDeg", gyroOffset.getDegrees());
+    }
+    wasGyroConnected = gyroInputs.connected;
+    Logger.recordOutput("Drive/Gyro/RebootCount", gyroRebootCount);
+
     // Update odometry
     double[] sampleTimestamps =
         modules[0].getOdometryTimestamps(); // All signals are sampled together
@@ -300,119 +376,33 @@ public class Drive extends FullSubsystem {
       }
 
       // Update gyro angle
-      if (gyroInputs.connected) {
-        // Use the real gyro angle
-        rawGyroRotation = gyroInputs.odometryYawPositions[i];
+      if (gyroInputs.connected && i < gyroInputs.odometryYawPositions.length) {
+        // Use the real gyro angle, corrected by the reboot offset
+        Rotation2d adjustedYaw = gyroInputs.odometryYawPositions[i].plus(gyroOffset);
+        // A yaw jump too large for one odometry sample means the gyro re-zeroed
+        // without a detected disconnect — re-anchor the offset on the fly.
+        if (Math.abs(adjustedYaw.minus(rawGyroRotation).getRadians())
+            > DriveConstants.gyroRezeroJumpThresholdRad) {
+          gyroOffset = rawGyroRotation.minus(gyroInputs.odometryYawPositions[i]);
+          adjustedYaw = rawGyroRotation;
+          gyroRebootCount++;
+          Logger.recordOutput("Drive/Gyro/RebootOffsetDeg", gyroOffset.getDegrees());
+        }
+        rawGyroRotation = adjustedYaw;
       } else {
-        // Use the angle delta from the kinematics and module deltas
+        // Coast on module twists (gyro disconnected or sample missing)
         Twist2d twist = kinematics.toTwist2d(moduleDeltas);
         rawGyroRotation = rawGyroRotation.plus(new Rotation2d(twist.dtheta));
       }
       // Apply update
       poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositions);
     }
-    doRejectUpdate = false;
-
     int[] validateID = DriveConstants.blueTags;
     if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) {
       validateID = DriveConstants.redTags;
     }
-    try {
-      LimelightHelpers.SetRobotOrientation(
-          "limelight-swerve",
-          poseEstimator.getEstimatedPosition().getRotation().getDegrees(),
-          0,
-          0,
-          0,
-          0,
-          0);
-      doRejectUpdate = false;
-      LimelightHelpers.SetFiducialIDFiltersOverride("limelight-swerve", validateID);
-      LimelightHelpers.PoseEstimate mt2_swerve =
-          LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-swerve");
-      if (mt2_swerve.tagCount == 0) {
-        doRejectUpdate = true;
-      } else {
-        doRejectUpdate = shouldReject(mt2_swerve, validateID);
-      }
-      if (!doRejectUpdate) {
-        double StdDev = calculateStdDevs(mt2_swerve, validateID);
-        if (StdDev != 9999999) {
-          poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(StdDev, StdDev, 9999999));
-          poseEstimator.addVisionMeasurement(mt2_swerve.pose, mt2_swerve.timestampSeconds);
-        }
-      }
-      Logger.recordOutput("LL/Swerve/pose", mt2_swerve.pose);
-      Logger.recordOutput("LL/Swerve/timestamp", mt2_swerve.timestampSeconds);
-      Logger.recordOutput("LL/Swerve/avgdist", mt2_swerve.avgTagDist);
-      Logger.recordOutput("LL/Swerve/latency", mt2_swerve.latency);
-    } catch (Exception e) {
-
-    }
-    try {
-      LimelightHelpers.SetRobotOrientation(
-          "limelight-left",
-          poseEstimator.getEstimatedPosition().getRotation().getDegrees(),
-          0,
-          0,
-          0,
-          0,
-          0);
-      doRejectUpdate = false;
-      Logger.recordOutput("LL/Left/connected", true);
-      LimelightHelpers.SetFiducialIDFiltersOverride("limelight-left", validateID);
-      LimelightHelpers.PoseEstimate mt2_left =
-          LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-left");
-      if (mt2_left.tagCount == 0) {
-        doRejectUpdate = true;
-      } else {
-        doRejectUpdate = shouldReject(mt2_left, validateID);
-      }
-      if (!doRejectUpdate) {
-        double StdDev = calculateStdDevs(mt2_left, validateID);
-        if (StdDev != 9999999) {
-          poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(StdDev, StdDev, 9999999));
-          poseEstimator.addVisionMeasurement(mt2_left.pose, mt2_left.timestampSeconds);
-        }
-        Logger.recordOutput("LL/Left/pose", mt2_left.pose);
-        Logger.recordOutput("LL/Left/timestamp", mt2_left.timestampSeconds);
-        Logger.recordOutput("LL/Left/avgdist", mt2_left.avgTagDist);
-        Logger.recordOutput("LL/Left/latency", mt2_left.latency);
-      }
-    } catch (Exception e) {
-
-    }
-    try {
-      LimelightHelpers.SetRobotOrientation(
-          "limelight-rear",
-          poseEstimator.getEstimatedPosition().getRotation().getDegrees(),
-          0,
-          0,
-          0,
-          0,
-          0);
-      doRejectUpdate = false;
-      LimelightHelpers.SetFiducialIDFiltersOverride("limelight-rear", validateID);
-      LimelightHelpers.PoseEstimate mt2_rear =
-          LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-rear");
-      if (mt2_rear.tagCount == 0) {
-        doRejectUpdate = true;
-      } else {
-        doRejectUpdate = shouldReject(mt2_rear, validateID);
-      }
-      if (!doRejectUpdate) {
-        double StdDev = calculateStdDevs(mt2_rear, validateID);
-        if (StdDev != 9999999) {
-          poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(StdDev, StdDev, 9999999));
-          poseEstimator.addVisionMeasurement(mt2_rear.pose, mt2_rear.timestampSeconds);
-        }
-      }
-      Logger.recordOutput("LL/Rear/pose", mt2_rear.pose);
-      Logger.recordOutput("LL/Rear/timestamp", mt2_rear.timestampSeconds);
-      Logger.recordOutput("LL/Rear/avgdist", mt2_rear.avgTagDist);
-      Logger.recordOutput("LL/Rear/latency", mt2_rear.latency);
-    } catch (Exception e) {
-
+    for (var camera : VisionConstants.cameras) {
+      processCamera(camera, validateID);
     }
 
     SmartDashboard.putNumberArray(

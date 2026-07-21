@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.constants.ContainerConstants;
+import frc.robot.constants.VisionConstants;
 import frc.robot.energy.FinanceDepartment;
 import frc.robot.generated.TunerConstants;
 import frc.robot.util.FullSubsystem;
@@ -147,17 +148,37 @@ public class Robot extends LoggedRobot {
   public void robotInit() {
     Pathfinding.setPathfinder(new LocalADStarAK());
     PathfindingCommand.warmupCommand().schedule();
-    LimelightHelpers.SetIMUMode("limelight-shooter", 1);
-    LimelightHelpers.SetIMUMode("limelight-chassis", 1);
+    // Robot boots disabled — keep the Limelight internal IMUs seeded from the robot gyro
+    setLimelightIMUModes(true);
 
     // Construct the energy manager before the first loop and anchor the battery estimate
     disabledTimer.start();
     FinanceDepartment.getInstance().reset();
   }
 
+  /**
+   * Applies the Limelight IMU mode for the current enable state. While disabled, EXTERNAL_SEED
+   * keeps each camera's internal IMU seeded. While enabled, LL4s run INTERNAL_EXTERNAL_ASSIST (1
+   * kHz internal IMU gently corrected by the robot gyro); LL3s stay on EXTERNAL_ONLY since the
+   * assist modes are LL4-only.
+   */
+  private void setLimelightIMUModes(boolean disabled) {
+    for (var camera : VisionConstants.cameras) {
+      int mode =
+          disabled
+              ? VisionConstants.imuModeDisabled
+              : (camera.isLL4()
+                  ? VisionConstants.imuModeEnabledLL4
+                  : VisionConstants.imuModeEnabledLL3);
+      LimelightHelpers.SetIMUMode(camera.name(), mode);
+    }
+  }
+
   /** This function is called once when the robot is disabled. */
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+    setLimelightIMUModes(true);
+  }
 
   /** This function is called periodically when disabled. */
   @Override
@@ -166,6 +187,7 @@ public class Robot extends LoggedRobot {
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
+    setLimelightIMUModes(false);
     autonomousCommand = robotContainer.getAutonomousCommand();
 
     // schedule the autonomous command (example)
@@ -182,6 +204,7 @@ public class Robot extends LoggedRobot {
   /** This function is called once when teleop is enabled. */
   @Override
   public void teleopInit() {
+    setLimelightIMUModes(false);
     // This makes sure that the autonomous stops running when
     // teleop starts running. If you want the autonomous to
     // continue until interrupted by another command, remove

@@ -1,5 +1,7 @@
 package frc.robot.constants;
 
+import edu.wpi.first.math.util.Units;
+
 public class DriveConstants {
   public static final double robotMassKg = 58;
   public static final double robotMOI = 4.084;
@@ -25,7 +27,7 @@ public class DriveConstants {
   public static final int[] blueTags =
       new int[] {17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30};
 
-  public static final double maxAmbiguity = 999;
-  public static final double maxCameraDist = 2.0;
-  public static final double minArea = 0.0;
+  // A yaw jump larger than this in a single odometry sample is a gyro re-zero
+  // (power cycle), not motion. Max physical is ~3 deg/sample at 250 Hz odometry.
+  public static final double gyroRezeroJumpThresholdRad = Units.degreesToRadians(10.0);
 }
