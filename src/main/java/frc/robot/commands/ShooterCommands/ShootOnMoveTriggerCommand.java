@@ -56,7 +56,13 @@ public class ShootOnMoveTriggerCommand extends ShootOnMoveAimCommand {
           SmartDashboard.getNumber("indexerHorizontalVelocity", 0),
           SmartDashboard.getNumber("indexerVerticleVelocity", 0));
       feeder.setFeederVelocityVoltage(SmartDashboard.getNumber("feederVelocity", 0));
-    } else {
+    } else if(turret.getIo().turretLocked && CheetahUtil.isNear(shooter.getMotorVelocity(), 250, 10)){
+      indexer.VelocityVoltage(
+          SmartDashboard.getNumber("indexerHorizontalVelocity", 0),
+          SmartDashboard.getNumber("indexerVerticleVelocity", 0));
+      feeder.setFeederVelocityVoltage(SmartDashboard.getNumber("feederVelocity", 0));
+    }
+    else {
       indexer.setMotorVoltage(0, 0);
       feeder.setFeederVoltage(0);
     }

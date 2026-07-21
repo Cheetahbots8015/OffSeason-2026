@@ -8,24 +8,24 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.20852380952381,
-        "y": 6.356488095238095
+        "x": 0.9803355760773931,
+        "y": 5.926374407582938
       },
       "isLocked": false,
       "linkedName": "Depot Intake"
     },
     {
       "anchor": {
-        "x": 2.2017380952380954,
-        "y": 6.788392857142858
+        "x": 1.6,
+        "y": 5.926374407582938
       },
       "prevControl": {
-        "x": 2.0430532393980916,
-        "y": 6.59521129351155
+        "x": 1.35,
+        "y": 5.926374407582938
       },
       "nextControl": {
-        "x": 2.4500833333333345,
-        "y": 7.090726190476191
+        "x": 1.85,
+        "y": 5.926374407582938
       },
       "isLocked": false,
       "linkedName": null
@@ -36,8 +36,8 @@
         "y": 7.306
       },
       "prevControl": {
-        "x": 3.0761428639639448,
-        "y": 7.306
+        "x": 1.3271309523809531,
+        "y": 7.749380952380953
       },
       "nextControl": null,
       "isLocked": false,
@@ -58,7 +58,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "reversed": false,
   "folder": null,
